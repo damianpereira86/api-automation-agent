@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [features/run-pr-with-ai]
+
+env:
+  BASEURL: ${{ vars.BASEURL }}
+  USER: ${{ secrets.USER }}
+  PASSWORD: ${{ secrets.PASSWORD }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        name: Checkout Code
+
+      - name: Install Dependencies
+        uses: actions/setup-node@v1
+        with:
+          node-version: "18.x"
+      - run: npm install
+
+      - name: Run ESLint
+        run: npm run lint
+
+      - name: Extract User Requirement
+        id: extract_value
+        run: |
+          PR_BODY=$(jq -r .pull_request.body $GITHUB_EVENT_PATH)
+          USER_REQUIREMENT=$(echo "$PR_BODY" | grep -oP '(?<=Automation: ).*' | tr -d '\r\n' || echo "")
+          USER_REQUIREMENT=$(echo "$USER_REQUIREMENT" | xargs)
+          if [ -z "$USER_REQUIREMENT" ]; then
+            echo "USER_REQUIREMENT='.*'" >> $GITHUB_ENV
+          else
+            echo "USER_REQUIREMENT='$USER_REQUIREMENT'" >> $GITHUB_ENV
+          fi        
+          echo "The extracted user requirement is $USER_REQUIREMENT"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract and Group Test Suites and Names
+        if: env.USER_REQUIREMENT != '.*'
+        run: |
+          ./node_modules/.bin/mocha ./src/tests --reporter json --dry-run > testStructure.json
+          node ./.github/workflows/transformTestData.js
+          cat groupedTestStructure.json
+
+      - name: Call API
+        if: env.USER_REQUIREMENT != '.*'
+        run: node ./.github/workflows/callApi.js
+
+      - name: Run Tests
+        run: ./node_modules/.bin/mocha --grep "$REGEX" --timeout 5000

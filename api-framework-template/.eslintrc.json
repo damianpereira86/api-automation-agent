@@ -1,0 +1,17 @@
+{
+  "parser": "@typescript-eslint/parser",
+  "parserOptions": {
+      "ecmaVersion": 2021
+  },
+  "extends": [
+      "plugin:@typescript-eslint/recommended",
+      "plugin:prettier/recommended"
+  ],
+  "plugins": ["ui-testing"],
+  "rules": {
+    "ui-testing/no-disabled-tests": "error", // default = warn
+    "ui-testing/no-focused-tests": "error", // default = warn
+    "@typescript-eslint/no-explicit-any": "off", // default = warn
+    "@typescript-eslint/no-non-null-assertion": "off"
+  }
+}

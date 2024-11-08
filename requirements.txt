@@ -1,0 +1,5 @@
+langchain-openai
+langchain-core
+PyYAML
+python-dotenv
+langchain-anthropic>=0.2.4

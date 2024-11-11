@@ -87,7 +87,7 @@ Found a bug or have a suggestion? Please open an issue on GitHub with:
 
 ## License
 
-This project is licensed under the MIT License - see [the License tab](https://github.com/damianpereira86/api-automation-agent?tab=MIT-1-ov-file) for details:
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## Acknowledgments
 

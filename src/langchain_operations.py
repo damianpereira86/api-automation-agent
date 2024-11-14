@@ -11,11 +11,11 @@ from .constants import Model
 from .tools.file_creation_tool import FileCreationTool
 
 MODEL = Model.CLAUDE_SONNET
-DOT_ENV_PROMPT = "../prompts/create-dot-env.txt"
-MODELS_PROMPT = "../prompts/create-models.txt"
-CREATE_FIRST_TEST_PROMPT = "../prompts/create-first-test.txt"
-CREATE_TESTS_PROMPT = "../prompts/create-tests.txt"
-FIX_TYPESCRIPT_PROMPT = "../prompts/fix-typescript.txt"
+DOT_ENV_PROMPT = "./prompts/create-dot-env.txt"
+MODELS_PROMPT = "./prompts/create-models.txt"
+CREATE_FIRST_TEST_PROMPT = "./prompts/create-first-test.txt"
+CREATE_TESTS_PROMPT = "./prompts/create-tests.txt"
+FIX_TYPESCRIPT_PROMPT = "./prompts/fix-typescript.txt"
 
 
 def _create_chain(prompt_path):

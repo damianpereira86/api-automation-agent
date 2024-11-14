@@ -6,7 +6,8 @@ The tests must be created for a custom framework I will detail below.
 
 ## Task
 
-Your task is to create all the Service and Model files for the OpenAPI Definition section.
+Your task is to create all the Service model files for the OpenAPI Definition section.
+- Create a Service file for each Service detailed in the OpenAPI Definition.
 - Include in each Service every verb detailed in the OpenAPI Definition.
 - Parameters to the verbs methods must be of type unknown, to allow to test negative scenarios.
 - Services must be placed inside /src/models/services folder.

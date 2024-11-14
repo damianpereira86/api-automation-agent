@@ -192,16 +192,16 @@ API-FRAMEWORK
 ├── .prettierrc.json
 └── src
     ├── base
-		    ├── ApiClient.ts
+		├── ApiClient.ts
         └── ApiClientBase.ts
         └── ServiceBase.ts
     ├── models
     │   ├── requests
     │   └── responses
-		│		    └── Response.ts
-    └── services
-        ├── AuthService.ts
-        └── BookingService.ts
+		│   └── Response.ts
+        └── services
+            ├── AuthService.ts
+            └── BookingService.ts
     └── tests
         ├── auth
         │   └── auth.spec.ts

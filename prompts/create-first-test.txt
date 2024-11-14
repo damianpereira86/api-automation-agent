@@ -173,10 +173,10 @@ API-FRAMEWORK
     ├── models
     │   ├── requests
     │   └── responses
-		    └── Response.ts
-    └── services
-        ├── AuthService.ts
-        └── BookingService.ts
+		│   └── Response.ts
+        └── services
+            ├── AuthService.ts
+            └── BookingService.ts
     └── tests
         ├── auth
         │   └── auth.spec.ts

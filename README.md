@@ -69,6 +69,18 @@ The generated framework will be created in your specified destination folder.
 
 Contributions are welcome! Here's how you can help:
 
+### Finding Tasks to Work On
+
+We maintain a [project board](https://github.com/users/damianpereira86/projects/1/views/1) to track features, enhancements, and bugs. Each task in the board includes:
+- Task descriptions
+- Priority
+- Complexity
+- Size
+
+New contributors can check out our ["Good First Issues"](https://github.com/users/damianpereira86/projects/1/views/7) view for beginner-friendly tasks to get started with.
+
+### Contribution Process
+
 1. Fork the repository
 2. Create a new branch (`git checkout -b feature/amazing-feature`)
 3. Make your changes

@@ -177,17 +177,17 @@ API-FRAMEWORK
     └── services
         ├── AuthService.ts
         └── BookingService.ts
-└── tests
-    ├── auth
-    │   └── auth.spec.ts
-    └── booking
-        ├── AddBooking.spec.ts
-        ├── DeleteBooking.spec.ts
-        ├── GetBooking.spec.ts
-        ├── GetBookingIds.spec.ts
-        ├── PatchBooking.spec.ts
-        └── UpdateBooking.spec.ts
-└── utils
+    └── tests
+        ├── auth
+        │   └── auth.spec.ts
+        └── booking
+            ├── AddBooking.spec.ts
+            ├── DeleteBooking.spec.ts
+            ├── GetBooking.spec.ts
+            ├── GetBookingIds.spec.ts
+            ├── PatchBooking.spec.ts
+            └── UpdateBooking.spec.ts
+    └── utils
 ```
 
 #### File examples
@@ -212,8 +212,8 @@ export interface BookingModel {{
 ##### Test examples
 
 ```tsx
-import {{ BookingService }} from "../../src/models/services/BookingService.js";
-import {{ BookingModel }} from "../../src/models/requests/BookingModel.js";
+import {{ BookingService }} from "../../models/services/BookingService.js";
+import {{ BookingModel }} from "../../models/requests/BookingModel.js";
 import chai from "chai";
 
 chai.should();
@@ -298,9 +298,9 @@ describe("Add Booking", () => {{
 ```
 
 ```tsx
-import {{ BookingModel }} from "../../src/models/requests/BookingModel.js";
-import {{ BookingResponse }} from "../../src/models/responses/BookingResponse.js";
-import {{ BookingService }} from "../../src/models/services/BookingService.js";
+import {{ BookingModel }} from "../../models/requests/BookingModel.js";
+import {{ BookingResponse }} from "../../models/responses/BookingResponse.js";
+import {{ BookingService }} from "../../models/services/BookingService.js";
 import chai from "chai";
 
 chai.should();

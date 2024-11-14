@@ -58,10 +58,10 @@ def process_verb(api_definition, models):
     return json.loads(chain.invoke({"api_definition": api_definition, "models": models}))
 
 
-def fix_typescript(files, messages, destination_folder, max_retries=3):
+def fix_typescript(files, messages):
     """Fix the TypeScript files"""
     print(f"\nFixing TypeScript files: ")
     for file in files:
         print(f"  - {file['path']}")
     chain = _create_chain(FIX_TYPESCRIPT_PROMPT)
-    fixed_files = chain.invoke({"files": files, "messages": messages})
+    chain.invoke({"files": files, "messages": messages})

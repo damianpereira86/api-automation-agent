@@ -86,17 +86,17 @@ API-FRAMEWORK
     └── services
         ├── AuthService.ts
         └── BookingService.ts
-└── tests
-    ├── auth
-    │   └── auth.spec.ts
-    └── booking
-        ├── AddBooking.spec.ts
-        ├── DeleteBooking.spec.ts
-        ├── GetBooking.spec.ts
-        ├── GetBookingIds.spec.ts
-        ├── PatchBooking.spec.ts
-        └── UpdateBooking.spec.ts
-└── utils
+    └── tests
+        ├── auth
+        │   └── auth.spec.ts
+        └── booking
+            ├── AddBooking.spec.ts
+            ├── DeleteBooking.spec.ts
+            ├── GetBooking.spec.ts
+            ├── GetBookingIds.spec.ts
+            ├── PatchBooking.spec.ts
+            └── UpdateBooking.spec.ts
+    └── utils
 ```
 
 #### Files

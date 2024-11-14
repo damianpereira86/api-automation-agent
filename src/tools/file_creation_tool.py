@@ -14,13 +14,18 @@ class FileSpec(BaseModel):
 
 
 class FileCreationInput(BaseModel):
-    files: List[FileSpec] = Field(description="A list of dicts, each containing a path and fileContent key")
+    files: List[FileSpec] = Field(description="A list of dicts, each containing a path and fileContent key", examples=[
+        [{
+            "path": "file.txt",
+            "fileContent": "Hello, World!"
+        }]
+    ])
 
 
 class FileCreationTool(BaseTool):
     name: str = "create_files"
-    description: str = "Create files with the given content."
-    args_schema: Type[BaseModel]  = FileCreationInput
+    description: str = "Create files with a given content."
+    args_schema: Type[BaseModel] = FileCreationInput
 
     def _run(self, files: List[FileSpec]) -> str:
         for file_spec in files:

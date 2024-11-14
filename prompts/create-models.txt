@@ -6,11 +6,12 @@ The tests must be created for a custom framework I will detail below.
 
 ## Task
 
-Your task is to create the Service files for the path documented on the OpenAPI Definition section.
+Your task is to create all the Service and Model files for the OpenAPI Definition section.
 - Include in each Service every verb detailed in the OpenAPI Definition.
 - Parameters to the verbs methods must be of type unknown, to allow to test negative scenarios.
 - Services must be placed inside /src/models/services folder.
 - If additional models are required, such as Request models, create separate files for them and import them into the Service Model class. Don't declare the models interfaces inside the service model file.
+- Models must be placed inside /src/models/requests or /src/models/responses folder.
 - For request models, declare all their properties as optional.
 - Include ".js" in the import statements for modules.
 - You will be penalized for every TS or eslint error.
@@ -110,17 +111,17 @@ API-FRAMEWORK
     └── services
         ├── AuthService.ts
         └── BookingService.ts
-└── tests
-    ├── auth
-    │   └── auth.spec.ts
-    └── booking
-        ├── AddBooking.spec.ts
-        ├── DeleteBooking.spec.ts
-        ├── GetBooking.spec.ts
-        ├── GetBookingIds.spec.ts
-        ├── PatchBooking.spec.ts
-        └── UpdateBooking.spec.ts
-└── utils
+    └── tests
+        ├── auth
+        │   └── auth.spec.ts
+        └── booking
+            ├── AddBooking.spec.ts
+            ├── DeleteBooking.spec.ts
+            ├── GetBooking.spec.ts
+            ├── GetBookingIds.spec.ts
+            ├── PatchBooking.spec.ts
+            └── UpdateBooking.spec.ts
+    └── utils
 ```
 
 #### Files

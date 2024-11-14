@@ -67,7 +67,7 @@ def run_command_with_fix(command_func, fix_func, files, *args, **kwargs):
             return result
 
         if fix_func:
-            fix_func(files, messages, *args)
+            fix_func(files, messages)
         retry_count += 1
 
     result = command_func(files, *args, **kwargs)

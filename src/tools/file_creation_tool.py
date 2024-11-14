@@ -1,6 +1,6 @@
 import json
 import os
-from typing import List, Type
+from typing import List, Type, Dict, Any
 
 from langchain_core.tools import BaseTool
 from pydantic import Field, BaseModel
@@ -15,10 +15,12 @@ class FileSpec(BaseModel):
 
 class FileCreationInput(BaseModel):
     files: List[FileSpec] = Field(description="A list of dicts, each containing a path and fileContent key", examples=[
-        [{
-            "path": "file.txt",
-            "fileContent": "Hello, World!"
-        }]
+        [
+            {
+                "path": "file.txt",
+                "fileContent": "Hello, World!"
+            }
+        ]
     ])
 
 
@@ -41,3 +43,17 @@ class FileCreationTool(BaseTool):
 
     async def _arun(self, files: List[FileSpec]) -> str:
         return self._run(files)
+
+    def _parse_input(self, tool_input: str | Dict) -> Dict[str, Any]:
+        if isinstance(tool_input, str):
+            data = json.loads(tool_input)
+        else:
+            data = tool_input
+
+        if isinstance(data['files'], str):
+            files_data = json.loads(data['files'])
+        else:
+            files_data = data['files']
+
+        file_specs = [FileSpec(**file_spec) for file_spec in files_data]
+        return {"files": file_specs}

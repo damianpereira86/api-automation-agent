@@ -31,7 +31,7 @@ def copy_framework_template(destination_folder):
     """
     Copy the API framework template to a new folder.
     """
-    src_folder = "../api-framework-template"
+    src_folder = "./api-framework-template"
     print("\nGenerating new framework...")
     try:
         shutil.copytree(src_folder, destination_folder)

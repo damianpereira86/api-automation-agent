@@ -14,37 +14,11 @@ Your task is to create API automation test code based on an OpenAPI definition u
   If the response type is not known or needed, pass null.
   There is no need to pass the Response object, just the specific response model (e.g. bookingService.getBooking<BookingModel>(bookingId);)
   Avoid using the type Response at all in the test file.
+- The files should be error-free TypeScript files, adhering to TypeScript and ESLint standards.
 - Use optional chaining (?.) in the test assertions or any place where object properties might be undefined (e.g., response.data?.id.should.equal(orderId);) to avoid potential undefined errors.
 - Create any other required model by the test that is not included in the Models section.
 - Include ".js" in the import statements.
 - You will be penalized for every TS or ESLint error.
-
-## Output
-
-The output should be a list of complete, error-free TypeScript files, adhering to TypeScript and ESLint standards.
-
-Provide the output as a JSON array of objects, where each object contains:
-- path: The original file path as provided in the input.
-- fileContent: The corrected content of the file.
-
-The path must be relative to the current folder.
-
-Formatting Requirements:
-- Ensure the JSON output is valid and contains an array of objects with path and fileContent.
-- For fileContent, escape special characters and ensure newline characters are presented in a way that is JSON-compatible (e.g., avoid \n format).
-- The output should be in JSON format only, with no additional markdown or formatting.
-
-Output Example:
-[{{
-  "path": "./src/tests/endpoint-name/TestName.spec.ts",
-  "fileContent": "This is the content of the file."
-}},
-{{
-  "path": "./src/models/responses/ModelName.ts",
-  "fileContent": "This is the content of the file."
-}}]
-
-Make sure the output is only this JSON array and nothing else.
 
 ## Framework Documentation
 

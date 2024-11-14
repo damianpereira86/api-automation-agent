@@ -1,6 +1,8 @@
-from config import load_environment
-from cli import parse_arguments, get_user_choice
-from framework_generator import FrameworkGenerator
+from langchain_core.globals import set_debug
+
+from src.config import load_environment, args
+from src.cli import get_user_choice
+from src.framework_generator import FrameworkGenerator
 
 
 def main():
@@ -8,8 +10,9 @@ def main():
         print("🚀 Starting the API Framework Generation Process! 🌟")
 
         try:
-            args = parse_arguments()
             load_environment()
+
+            set_debug(True)
             generator = FrameworkGenerator(
                 args.api_file_path, args.destination_folder, args.endpoint
             )

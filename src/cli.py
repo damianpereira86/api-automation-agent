@@ -10,7 +10,7 @@ def parse_arguments():
     parser.add_argument(
         "--destination-folder",
         type=str,
-        default=f"./generated-framework_{datetime.now().strftime('%Y%m%d-%H%M%S')}",
+        default=f"../generated/generated-framework_{datetime.now().strftime('%Y%m%d-%H%M%S')}",
         help="Destination folder in which the files will be created (optional).",
     )
     parser.add_argument(

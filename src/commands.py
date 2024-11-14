@@ -1,4 +1,4 @@
-from utilities import run_command
+from .utilities import run_command
 
 
 def install_dependencies(destination_folder):

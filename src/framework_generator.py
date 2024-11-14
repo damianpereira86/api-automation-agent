@@ -1,12 +1,12 @@
-from api_processing import process_api_definition
-from file_manager import create_files, copy_framework_template
-from langchain_operations import (
+from .api_processing import process_api_definition
+from .file_manager import copy_framework_template
+from .langchain_operations import (
     create_dot_env,
     process_path,
     process_verb,
     fix_typescript,
 )
-from commands import (
+from .commands import (
     install_dependencies,
     format_files,
     run_linter,
@@ -14,13 +14,13 @@ from commands import (
     run_typescript_compiler,
     run_typescript_compiler_for_files,
 )
-from utilities import run_command_with_fix
+from .utilities import run_command_with_fix
 
 
 class FrameworkGenerator:
     def __init__(self, api_file_path, destination_folder, endpoint=None):
-        self.api_file_path = api_file_path
         self.destination_folder = destination_folder
+        self.api_file_path = api_file_path
         self.endpoint = endpoint
         self.models_count = 0
         self.tests_count = 0
@@ -34,7 +34,7 @@ class FrameworkGenerator:
 
     def create_env_file(self, api_definition):
         print("\nGenerating .env file")
-        create_dot_env(api_definition, self.destination_folder)
+        create_dot_env(api_definition)
 
     def process_definitions(self, merged_api_definition_list, generate_tests):
         print("\nProcessing paths and verbs...")
@@ -67,7 +67,6 @@ class FrameworkGenerator:
         print(f"Generating models for path: {api_definition['path']}...")
         models = process_path(api_definition["yaml"])
         if models is not None:
-            create_files(models, self.destination_folder)
             self.models_count += len(models)
             self._run_code_quality_checks(models)
         return models
@@ -78,7 +77,6 @@ class FrameworkGenerator:
         )
         tests = process_verb(api_definition["yaml"], models)
         if tests is not None:
-            create_files(tests, self.destination_folder)
             self.tests_count += 1
             self._run_code_quality_checks(tests)
 

@@ -61,4 +61,8 @@ target/
 # Jupyter Notebook
 .ipynb_checkpoints
 
-# I
+# Idea
+/.idea
+
+# FrameWork results
+/generated/*

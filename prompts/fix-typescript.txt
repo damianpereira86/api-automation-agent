@@ -7,29 +7,16 @@ Your primary task is to fix TypeScript compiler errors in API automation test co
 
 - I will provide a JSON file containing TypeScript code files and a string with TypeScript compiler error messages. 
 - Each entry in the JSON includes a file path and its corresponding code content.
-
+- You have to re-write the files with the minimal changes required to fix the TypeScript compiler errors.
 - Focus strictly on fixing the errors specified in the compiler messages. Do not make changes to any parts of the code not directly referenced by these error messages.
 - Preserve the existing code structure and logic wherever possible, making only the minimal adjustments needed to resolve each error.
 - The goal is to make the code error-free according to TypeScript standards and compiler requirements, without adding, refactoring, or optimizing unrelated code.
 
 ## Output
 
-Provide the output as a JSON array of objects, where each object contains:
-- path: The original file path as provided in the input.
-- fileContent: The corrected content of the file.
-
-Formatting Requirements:
-- Ensure the JSON output is valid, containing an array of objects with path and fileContent.
-- For fileContent, escape special characters and ensure newline characters are presented in a way that is JSON-compatible (e.g., avoid \n format).
-- The output should be in JSON format only, with no additional markdown or formatting.
-
-Output Example:
-[{{
-  "path": "./src/tests/endpoint-name/TestName.spec.ts",
-  "fileContent": "Corrected TypeScript code content"
-}}]
-
-Make sure the output is only this JSON array and nothing else.
+The ouput must contain the function call for all the files generated.
+Generate all files at once.
+Make sure the output is only the function call and nothing else.
 
 ## Files
 ```json

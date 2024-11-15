@@ -9,38 +9,18 @@ The tests must be created for a custom framework I will detail below.
 Your task is to create the Service Model file for the path documented on the OpenAPI Definition section.
 - Include in the Service Model every verb detailed in the OpenAPI Definition.
 - Parameters to the verbs methods must be of type unknown, to allow to test negative scenarios.
-- If additional models are required, such as Request models, create separate files for them and import them into the Service Model class. Don't declare the models interfaces inside the service model file.
+- Service Models must be placed inside /src/models/services folder.
+- If additional models are required, such as Request or Response models, create separate files for them and import them into the Service Model class. Don't declare the models interfaces inside the service model file.
+- Models must be placed inside /src/models/requests or /src/models/responses folders.
 - For request models, declare all their properties as optional.
 - Include ".js" in the import statements for modules.
 - You will be penalized for every TS or eslint error.
 
 ## Output
 
-The ouput must contain, at least, the Service Model for the path in the OpenAPI Definition.
-Service Models must be placed inside /src/models/services folder.
-
-Provide the output as a JSON array of objects, where each object contains:
-- path: The original file path as provided in the input.
-- fileContent: The corrected content of the file.
-
-The path must be relative to the current folder.
-
-Formatting Requirements:
-- Ensure the JSON output is valid and contains an array of objects with path and fileContent.
-- For fileContent, escape special characters and ensure newline characters are presented in a way that is JSON-compatible (e.g., avoid \n format).
-- The output should be in JSON format only, with no additional markdown or formatting.
-
-Output Example:
-[{{
-  "path": "./src/models/services/ServiceName.ts",
-  "fileContent": "This is the content of the file."
-}},
-{{
-  "path": "./src/models/requests/ModelName.ts",
-  "fileContent": "This is the content of the file."
-}}]
-
-Make sure the output is only this JSON array and nothing else.
+The ouput must contain the function call for all the files generated.
+Generate all files at once.
+Make sure the output is only the function call and nothing else.
 
 ## Framework Documentation
 
@@ -127,27 +107,27 @@ API-FRAMEWORK
 ├── .prettierrc.json
 └── src
     ├── base
-		    ├── ApiClient.ts
-        └── ApiClientBase.ts
-        └── ServiceBase.ts
+		├── ApiClient.ts
+    │   └── ApiClientBase.ts
+    │   └── ServiceBase.ts
     ├── models
     │   ├── requests
     │   └── responses
-		│		    └── Response.ts
-    └── services
-        ├── AuthService.ts
-        └── BookingService.ts
-└── tests
-    ├── auth
-    │   └── auth.spec.ts
-    └── booking
-        ├── AddBooking.spec.ts
-        ├── DeleteBooking.spec.ts
-        ├── GetBooking.spec.ts
-        ├── GetBookingIds.spec.ts
-        ├── PatchBooking.spec.ts
-        └── UpdateBooking.spec.ts
-└── utils
+		│   │  └── Response.ts
+    │   └── services
+    │     ├── AuthService.ts
+    │     └── BookingService.ts
+    └── tests
+    │   ├── auth
+    │   │   └── auth.spec.ts
+    │   └── booking
+    │       ├── AddBooking.spec.ts
+    │       ├── DeleteBooking.spec.ts
+    │       ├── GetBooking.spec.ts
+    │       ├── GetBookingIds.spec.ts
+    │       ├── PatchBooking.spec.ts
+    │       └── UpdateBooking.spec.ts
+    └── utils
 ```
 
 #### Files

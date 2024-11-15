@@ -12,20 +12,8 @@ Add any other environment variables you think are necessary for API automation b
 
 ## Output
 
-The output should be a JSON array with a single object containing:
-- path: The relative path to the .env file (e.g., "./.env").
-- fileContent: The content of the .env file, formatted as a properly escaped JSON string.
-
-Return the output in the following format:
-[{{
-  "path": "./.env",
-  "fileContent": "This is the content of the file."
-}}]
-
-Make sure:
-- The JSON output is valid.
-- Only the JSON string is returned, with no additional markdown or formatting.
-- The content is properly escaped to fit within the JSON structure.
+The ouput must contain the function call for all the file generated.
+Make sure the output is only the function call and nothing else.
 
 ## Framework Documentation
 
@@ -93,27 +81,27 @@ API-FRAMEWORK
 ├── .prettierrc.json
 └── src
     ├── base
-		    ├── ApiClient.ts
-        └── ApiClientBase.ts
-        └── ServiceBase.ts
+		├── ApiClient.ts
+    │   └── ApiClientBase.ts
+    │   └── ServiceBase.ts
     ├── models
     │   ├── requests
     │   └── responses
-		│		    └── Response.ts
-    └── services
-        ├── AuthService.ts
-        └── BookingService.ts
-└── tests
-    ├── auth
-    │   └── auth.spec.ts
-    └── booking
-        ├── AddBooking.spec.ts
-        ├── DeleteBooking.spec.ts
-        ├── GetBooking.spec.ts
-        ├── GetBookingIds.spec.ts
-        ├── PatchBooking.spec.ts
-        └── UpdateBooking.spec.ts
-└── utils
+		│   │  └── Response.ts
+    │   └── services
+    │     ├── AuthService.ts
+    │     └── BookingService.ts
+    └── tests
+    │   ├── auth
+    │   │   └── auth.spec.ts
+    │   └── booking
+    │       ├── AddBooking.spec.ts
+    │       ├── DeleteBooking.spec.ts
+    │       ├── GetBooking.spec.ts
+    │       ├── GetBookingIds.spec.ts
+    │       ├── PatchBooking.spec.ts
+    │       └── UpdateBooking.spec.ts
+    └── utils
 ```
 
 #### Files

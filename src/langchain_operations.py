@@ -1,11 +1,14 @@
 import json
-from file_manager import create_files
-from langchain_openai import ChatOpenAI
+
 from langchain_anthropic import ChatAnthropic
-from langchain_core.prompts import ChatPromptTemplate
+from langchain_anthropic.chat_models import convert_to_anthropic_tool
 from langchain_core.output_parsers import StrOutputParser
-from utilities import clean_json_from_markdown
-from constants import Model
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.utils.function_calling import convert_to_openai_tool
+from langchain_openai import ChatOpenAI
+
+from .constants import Model
+from .tools.file_creation_tool import FileCreationTool
 
 MODEL = Model.CLAUDE_SONNET
 DOT_ENV_PROMPT = "./prompts/create-dot-env.txt"
@@ -29,75 +32,36 @@ def _create_chain(prompt_path):
 
     if Model.is_anthropic(MODEL):
         llm = ChatAnthropic(model_name=MODEL, temperature=1)
+        llm_with_tools = llm.bind_tools([convert_to_anthropic_tool(FileCreationTool())])
     else:
         llm = ChatOpenAI(model_name=MODEL, temperature=1)
-
-    output_parser = StrOutputParser()
-    chain = prompt_template | llm | output_parser
+        llm_with_tools = llm.bind_tools([convert_to_openai_tool(FileCreationTool())])
+    chain = prompt_template | llm_with_tools | (lambda x: x.tool_calls[0]["args"]) | FileCreationTool().invoke
     return chain
 
 
-def _execute_chain_with_retry(chain, inputs, max_retries=3):
-    """
-    Generic function to execute a chain with retry logic.
-
-    Args:
-    - chain: The LangChain chain to execute
-    - inputs (dict): The inputs for the chain
-    - max_retries (int): Maximum number of retry attempts
-    """
-    attempt = 0
-    while attempt < max_retries:
-        try:
-            files_json = chain.invoke(inputs)
-            cleaned_json = clean_json_from_markdown(files_json)
-            return json.loads(cleaned_json)
-        except json.JSONDecodeError:
-            print(
-                f"Failed to parse JSON, retrying... Attempt {attempt + 1}/{max_retries}"
-            )
-            attempt += 1
-        except Exception as e:
-            print(f"An unexpected error occurred: {e}")
-            break
-    print("Max retries reached or an unexpected error occurred. Aborting operation.")
-    return None
-
-
-def create_dot_env(api_definition, destination_folder, max_retries=3):
+def create_dot_env(api_definition):
     """Create the .env file"""
     chain = _create_chain(DOT_ENV_PROMPT)
-    dot_env_file = _execute_chain_with_retry(
-        chain, {"api_definition": api_definition}, max_retries
-    )
-    if dot_env_file is not None:
-        create_files(dot_env_file, destination_folder)
+    return json.loads(chain.invoke({"api_definition": api_definition}))
 
 
-def process_path(api_definition, max_retries=3):
+def process_path(api_definition):
     """Process a path in an API definition"""
     chain = _create_chain(MODELS_PROMPT)
-    return _execute_chain_with_retry(
-        chain, {"api_definition": api_definition}, max_retries
-    )
+    return json.loads(chain.invoke({"api_definition": api_definition}))
 
 
-def process_verb(api_definition, models, max_retries=3):
+def process_verb(api_definition, models):
     """Process a verb in an API definition"""
     chain = _create_chain(CREATE_FIRST_TEST_PROMPT)
-    return _execute_chain_with_retry(
-        chain, {"api_definition": api_definition, "models": models}, max_retries
-    )
+    return json.loads(chain.invoke({"api_definition": api_definition, "models": models}))
 
 
-def fix_typescript(files, messages, destination_folder, max_retries=3):
+def fix_typescript(files, messages):
     """Fix the TypeScript files"""
     print(f"\nFixing TypeScript files: ")
     for file in files:
         print(f"  - {file['path']}")
     chain = _create_chain(FIX_TYPESCRIPT_PROMPT)
-    fixed_files = _execute_chain_with_retry(
-        chain, {"files": files, "messages": messages}, max_retries
-    )
-    if fixed_files is not None:
-        create_files(fixed_files, destination_folder)
+    chain.invoke({"files": files, "messages": messages})

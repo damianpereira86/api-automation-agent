@@ -67,30 +67,10 @@ def run_command_with_fix(command_func, fix_func, files, *args, **kwargs):
             return result
 
         if fix_func:
-            fix_func(files, messages, *args)
+            fix_func(files, messages)
         retry_count += 1
 
     result = command_func(files, *args, **kwargs)
     if not result[0]:
         print(f"Command failed after {max_retries} attempts.")
-    return result  # Return the last failed result
-
-
-def clean_json_from_markdown(json_markdown):
-    if json_markdown.startswith("```json") and json_markdown.endswith("```"):
-        clean_json = json_markdown[7:-3]
-    elif json_markdown.startswith("```") and json_markdown.endswith("```"):
-        clean_json = json_markdown[3:-3]
-    else:
-        clean_json = json_markdown
-
-    clean_json = clean_json.strip()
-    return clean_json
-
-
-def remove_newlines_from_file_content(files):
-    """Remove newlines from file content in the files dictionary."""
-    for file in files:
-        if "fileContent" in file:
-            file["fileContent"] = file["fileContent"].replace("\n", "")
-    return files
+    return result

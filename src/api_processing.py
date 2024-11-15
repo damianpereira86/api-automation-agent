@@ -1,6 +1,7 @@
-import yaml
 import copy
 import json
+
+import yaml
 
 
 def process_api_definition(api_file_path):

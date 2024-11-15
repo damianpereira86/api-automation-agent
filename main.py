@@ -12,7 +12,7 @@ def main():
         try:
             load_environment()
 
-            # set_debug(True)
+            set_debug(True)
             generator = FrameworkGenerator(
                 args.api_file_path, args.destination_folder, args.endpoint
             )

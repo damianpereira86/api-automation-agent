@@ -76,26 +76,26 @@ API-FRAMEWORK
 ├── .prettierrc.json
 └── src
     ├── base
-		    ├── ApiClient.ts
-        └── ApiClientBase.ts
-        └── ServiceBase.ts
+		├── ApiClient.ts
+    │   └── ApiClientBase.ts
+    │   └── ServiceBase.ts
     ├── models
     │   ├── requests
     │   └── responses
-		│		    └── Response.ts
-    └── services
-        ├── AuthService.ts
-        └── BookingService.ts
+		│   │  └── Response.ts
+    │   └── services
+    │     ├── AuthService.ts
+    │     └── BookingService.ts
     └── tests
-        ├── auth
-        │   └── auth.spec.ts
-        └── booking
-            ├── AddBooking.spec.ts
-            ├── DeleteBooking.spec.ts
-            ├── GetBooking.spec.ts
-            ├── GetBookingIds.spec.ts
-            ├── PatchBooking.spec.ts
-            └── UpdateBooking.spec.ts
+    │   ├── auth
+    │   │   └── auth.spec.ts
+    │   └── booking
+    │       ├── AddBooking.spec.ts
+    │       ├── DeleteBooking.spec.ts
+    │       ├── GetBooking.spec.ts
+    │       ├── GetBookingIds.spec.ts
+    │       ├── PatchBooking.spec.ts
+    │       └── UpdateBooking.spec.ts
     └── utils
 ```
 

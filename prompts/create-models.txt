@@ -6,16 +6,21 @@ The tests must be created for a custom framework I will detail below.
 
 ## Task
 
-Your task is to create all the Service, Request and Response model files for the OpenAPI Definition section.
-- Create a Service file for each Service detailed in the OpenAPI Definition.
-- Include in each Service every verb detailed in the OpenAPI Definition.
+Your task is to create the Service Model file for the path documented on the OpenAPI Definition section.
+- Include in the Service Model every verb detailed in the OpenAPI Definition.
 - Parameters to the verbs methods must be of type unknown, to allow to test negative scenarios.
-- Services must be placed inside /src/models/services folder.
-- If additional models are required, such as Request models, create separate files for them and import them into the Service Model class. Don't declare the models interfaces inside the service model file.
-- Models must be placed inside /src/models/requests or /src/models/responses folder.
+- Service Models must be placed inside /src/models/services folder.
+- If additional models are required, such as Request or Response models, create separate files for them and import them into the Service Model class. Don't declare the models interfaces inside the service model file.
+- Models must be placed inside /src/models/requests or /src/models/responses folders.
 - For request models, declare all their properties as optional.
 - Include ".js" in the import statements for modules.
 - You will be penalized for every TS or eslint error.
+
+## Output
+
+The ouput must contain the function call for all the files generated.
+Generate all files at once.
+Make sure the output is only the function call and nothing else.
 
 ## Framework Documentation
 
@@ -103,25 +108,25 @@ API-FRAMEWORK
 └── src
     ├── base
 		├── ApiClient.ts
-        └── ApiClientBase.ts
-        └── ServiceBase.ts
+    │   └── ApiClientBase.ts
+    │   └── ServiceBase.ts
     ├── models
     │   ├── requests
     │   └── responses
-		│   └── Response.ts
-        └── services
-            ├── AuthService.ts
-            └── BookingService.ts
+		│   │  └── Response.ts
+    │   └── services
+    │     ├── AuthService.ts
+    │     └── BookingService.ts
     └── tests
-        ├── auth
-        │   └── auth.spec.ts
-        └── booking
-            ├── AddBooking.spec.ts
-            ├── DeleteBooking.spec.ts
-            ├── GetBooking.spec.ts
-            ├── GetBookingIds.spec.ts
-            ├── PatchBooking.spec.ts
-            └── UpdateBooking.spec.ts
+    │   ├── auth
+    │   │   └── auth.spec.ts
+    │   └── booking
+    │       ├── AddBooking.spec.ts
+    │       ├── DeleteBooking.spec.ts
+    │       ├── GetBooking.spec.ts
+    │       ├── GetBookingIds.spec.ts
+    │       ├── PatchBooking.spec.ts
+    │       └── UpdateBooking.spec.ts
     └── utils
 ```
 

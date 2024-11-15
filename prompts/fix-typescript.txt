@@ -12,6 +12,12 @@ Your primary task is to fix TypeScript compiler errors in API automation test co
 - Preserve the existing code structure and logic wherever possible, making only the minimal adjustments needed to resolve each error.
 - The goal is to make the code error-free according to TypeScript standards and compiler requirements, without adding, refactoring, or optimizing unrelated code.
 
+## Output
+
+The ouput must contain the function call for all the files generated.
+Generate all files at once.
+Make sure the output is only the function call and nothing else.
+
 ## Files
 ```json
 {files}

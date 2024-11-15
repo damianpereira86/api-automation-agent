@@ -1,4 +1,5 @@
 from langchain_core.globals import set_debug
+import os
 
 from src.config import load_environment, args
 from src.cli import get_user_choice
@@ -12,7 +13,9 @@ def main():
         try:
             load_environment()
 
-            # set_debug(True)
+            if os.getenv("DEBUG", "False").lower() == "true":
+                set_debug(True)
+
             generator = FrameworkGenerator(
                 args.api_file_path, args.destination_folder, args.endpoint
             )

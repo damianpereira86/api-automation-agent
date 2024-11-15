@@ -14,14 +14,10 @@ class FileSpec(BaseModel):
 
 
 class FileCreationInput(BaseModel):
-    files: List[FileSpec] = Field(description="A list of dicts, each containing a path and fileContent key", examples=[
-        [
-            {
-                "path": "file.txt",
-                "fileContent": "Hello, World!"
-            }
-        ]
-    ])
+    files: List[FileSpec] = Field(
+        description="A list of dicts, each containing a path and fileContent key",
+        examples=[[{"path": "file.txt", "fileContent": "Hello, World!"}]],
+    )
 
 
 class FileCreationTool(BaseTool):
@@ -39,6 +35,8 @@ class FileCreationTool(BaseTool):
             os.makedirs(os.path.dirname(updated_path), exist_ok=True)
             with open(updated_path, "w") as f:
                 f.write(content)
+            print(f"Created file: {path}")
+
         return json.dumps([file_spec.model_dump() for file_spec in files])
 
     async def _arun(self, files: List[FileSpec]) -> str:
@@ -50,10 +48,10 @@ class FileCreationTool(BaseTool):
         else:
             data = tool_input
 
-        if isinstance(data['files'], str):
-            files_data = json.loads(data['files'])
+        if isinstance(data["files"], str):
+            files_data = json.loads(data["files"])
         else:
-            files_data = data['files']
+            files_data = data["files"]
 
         file_specs = [FileSpec(**file_spec) for file_spec in files_data]
         return {"files": file_specs}

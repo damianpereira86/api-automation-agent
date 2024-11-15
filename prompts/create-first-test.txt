@@ -20,6 +20,12 @@ Your task is to create API automation test code based on an OpenAPI definition u
 - Include ".js" in the import statements.
 - You will be penalized for every TS or ESLint error.
 
+## Output
+
+The ouput must contain the function call for all the files generated.
+Generate all files at once.
+Make sure the output is only the function call and nothing else.
+
 ## Framework Documentation
 
 ### API Automation Framework (TS+Mocha)

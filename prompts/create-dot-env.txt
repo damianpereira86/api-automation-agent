@@ -10,6 +10,11 @@ Create the .env file needed for API automation, using information from the OpenA
 The .env file must include a BASEURL variable with the expected value based on the OpenAPI definition.
 Add any other environment variables you think are necessary for API automation based on the OpenAPI definition.
 
+## Output
+
+The ouput must contain the function call for all the file generated.
+Make sure the output is only the function call and nothing else.
+
 ## Framework Documentation
 
 ### API Automation Framework (TS+Mocha)

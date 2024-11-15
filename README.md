@@ -65,6 +65,26 @@ After running, you'll be prompted to choose:
 
 The generated framework will be created in your specified destination folder.
 
+## Testing the Agent
+
+To try out the agent without using your own API specification, you can use the sample API definitions provided in the `api-definitions` folder. They are derived from the Pet Store API described in https://petstore.swagger.io/#/
+
+1. Start with the Store endpoints (recommended for testing and debugging because of its size):
+```bash
+python ./src/main.py api-definitions/petstore-swagger-store.json
+```
+
+This is a simple and small API specification that includes basic CRUD operations and is ideal for testing the agent's capabilities.  
+
+Estimated cost to run Store example: US$ ~0.1
+
+Other available test specifications:
+- `api-definitions/petstore-swagger-user.json` User endpoints
+- `api-definitions/petstore-swagger-reduced.json` User and Store endpoints
+- `api-definitions/petstore-swagger.json` Complete Pet Store API
+
+Each specification varies in complexity and will generate different amounts of code and tests, affecting the total cost of execution.
+
 ## Contributing
 
 Contributions are welcome! Here's how you can help:

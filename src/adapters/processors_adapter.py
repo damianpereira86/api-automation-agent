@@ -5,7 +5,7 @@ from src.processors.swagger_processor import SwaggerProcessor
 
 
 class ProcessorsAdapter(containers.DeclarativeContainer):
-    """Container for Swagger processing components."""
+    """Adapter for processor components."""
 
     file_loader = providers.Factory(
         FileLoader

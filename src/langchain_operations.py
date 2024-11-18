@@ -30,13 +30,18 @@ def _create_chain(prompt_path):
 
     prompt_template = ChatPromptTemplate.from_template(prompt)
 
-    if Model.is_anthropic(MODEL):
-        llm = ChatAnthropic(model_name=MODEL, temperature=1)
+    if Model.is_anthropic(MODEL.value):
+        llm = ChatAnthropic(model_name=MODEL.value, temperature=1)
         llm_with_tools = llm.bind_tools([convert_to_anthropic_tool(FileCreationTool())])
     else:
-        llm = ChatOpenAI(model_name=MODEL, temperature=1)
+        llm = ChatOpenAI(model_name=MODEL.value, temperature=1)
         llm_with_tools = llm.bind_tools([convert_to_openai_tool(FileCreationTool())])
-    chain = prompt_template | llm_with_tools | (lambda x: x.tool_calls[0]["args"]) | FileCreationTool().invoke
+    chain = (
+        prompt_template
+        | llm_with_tools
+        | (lambda x: x.tool_calls[0]["args"])
+        | FileCreationTool().invoke
+    )
     return chain
 
 
@@ -55,7 +60,9 @@ def process_path(api_definition):
 def process_verb(api_definition, models):
     """Process a verb in an API definition"""
     chain = _create_chain(CREATE_FIRST_TEST_PROMPT)
-    return json.loads(chain.invoke({"api_definition": api_definition, "models": models}))
+    return json.loads(
+        chain.invoke({"api_definition": api_definition, "models": models})
+    )
 
 
 def fix_typescript(files, messages):

@@ -1,91 +1,147 @@
-from .api_processing import process_api_definition
-from .file_manager import copy_framework_template
-from .langchain_operations import (
-    create_dot_env,
-    process_path,
-    process_verb,
-    fix_typescript,
-)
-from .commands import (
-    install_dependencies,
-    format_files,
-    run_linter,
-    run_tests,
-    run_typescript_compiler,
-    run_typescript_compiler_for_files,
-)
-from .utilities import run_command_with_fix
+from typing import Optional, List, Dict, Any
+
+from .configuration.config import Config
+from .processors.swagger_processor import SwaggerProcessor
+from .services.command_service import CommandService
+from .services.file_service import FileService
+from .services.llm_service import LLMService
+from .utils.logger import Logger
 
 
 class FrameworkGenerator:
-    def __init__(self, api_file_path, destination_folder, endpoint=None):
-        self.destination_folder = destination_folder
-        self.api_file_path = api_file_path
-        self.endpoint = endpoint
+    def __init__(
+            self,
+            config: Config,
+            llm_service: LLMService,
+            command_service: CommandService,
+            file_service: FileService,
+            swagger_processor: SwaggerProcessor
+    ):
+        self.config = config
+        self.llm_service = llm_service
+        self.command_service = command_service
+        self.file_service = file_service
+        self.swagger_processor = swagger_processor
         self.models_count = 0
         self.tests_count = 0
+        self.logger = Logger.get_logger(__name__)
 
-    def process_api_definition(self):
-        return process_api_definition(self.api_file_path)
+    def _log_error(self, message: str, exc: Exception):
+        """Helper method to log errors consistently"""
+        self.logger.error(f"{message}: {exc}")
+
+    def process_api_definition(self) -> List[Dict[str, Any]]:
+        """Process the API definition file and return a list of API endpoints"""
+        try:
+            self.logger.info(f"Processing API definition from {self.config.api_file_path}")
+            return self.swagger_processor.process_api_definition(self.config.api_file_path)
+        except Exception as e:
+            self._log_error("Error processing API definition", e)
+            raise
 
     def setup_framework(self):
-        copy_framework_template(self.destination_folder)
-        install_dependencies(self.destination_folder)
+        """Set up the framework environment"""
+        try:
+            self.logger.info(f"Setting up framework in {self.config.destination_folder}")
+            self.file_service.copy_framework_template(self.config.destination_folder)
+            self.command_service.install_dependencies()
+        except Exception as e:
+            self._log_error("Error setting up framework", e)
+            raise
 
     def create_env_file(self, api_definition):
-        print("\nGenerating .env file")
-        create_dot_env(api_definition)
+        """Generate the .env file from the provided API definition"""
+        try:
+            self.logger.info("Generating .env file")
+            self.llm_service.generate_dot_env(api_definition)
+        except Exception as e:
+            self._log_error("Error creating .env file", e)
+            raise
 
-    def process_definitions(self, merged_api_definition_list, generate_tests):
-        print("\nProcessing paths and verbs...")
-        models = None
+    def process_definitions(
+            self,
+            merged_api_definition_list: List[Dict[str, Any]],
+            generate_tests: bool = True
+    ):
+        """Process the API definitions and generate models and tests"""
+        try:
+            self.logger.info("Processing API definitions")
+            models = None
 
-        for api_definition in merged_api_definition_list:
-            if not self._should_process_endpoint(api_definition["path"]):
-                continue
+            for api_definition in merged_api_definition_list:
+                if not self._should_process_endpoint(api_definition["path"]):
+                    continue
 
-            if api_definition["type"] == "path":
-                models = self._process_path_definition(api_definition)
-            elif generate_tests and api_definition["type"] == "verb":
-                self._process_verb_definition(api_definition, models)
+                if api_definition["type"] == "path":
+                    models = self._process_path_definition(api_definition)
+                elif generate_tests and api_definition["type"] == "verb":
+                    self._process_verb_definition(api_definition, models)
 
-        print(
-            f"\nGeneration complete. {self.models_count} models and {self.tests_count} tests were generated."
-        )
+            self.logger.info(f"Generation complete. {self.models_count} models and {self.tests_count} tests were generated.")
+        except Exception as e:
+            self._log_error("Error processing definitions", e)
+            raise
 
-    def run_final_checks(self, generate_tests):
-        result = run_typescript_compiler(self.destination_folder)
-        success, _ = result
+    def run_final_checks(self, generate_tests: bool = True):
+        """Run final checks like TypeScript compilation and tests"""
+        try:
+            result = self.command_service.run_typescript_compiler()
+            success, _ = result
 
-        if success and generate_tests:
-            run_tests(self.destination_folder)
+            if success and generate_tests:
+                self.command_service.run_tests()
 
-    def _should_process_endpoint(self, path):
-        return self.endpoint is None or self.endpoint == path
+            self.logger.info("Final checks completed")
+        except Exception as e:
+            self._log_error("Error during final checks", e)
+            raise
 
-    def _process_path_definition(self, api_definition):
-        print(f"Generating models for path: {api_definition['path']}...")
-        models = process_path(api_definition["yaml"])
-        if models is not None:
-            self.models_count += len(models)
-            self._run_code_quality_checks(models)
-        return models
+    def _should_process_endpoint(self, path: str) -> bool:
+        """Check if an endpoint should be processed based on configuration"""
+        return self.config.endpoint is None or self.config.endpoint == path
 
-    def _process_verb_definition(self, api_definition, models):
-        print(
-            f"Generating tests for path: {api_definition['path']} and verb: {api_definition['verb']}..."
-        )
-        tests = process_verb(api_definition["yaml"], models)
-        if tests is not None:
-            self.tests_count += 1
-            self._run_code_quality_checks(tests)
+    def _process_path_definition(self, api_definition: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
+        """Process a path definition and generate models"""
+        try:
+            self.logger.info(f"Generating models for path: {api_definition['path']}")
+            models = self.llm_service.generate_models(api_definition["yaml"])
+            if models:
+                self.models_count += len(models)
+                self._run_code_quality_checks(models)
+            return models
+        except Exception as e:
+            self._log_error(f"Error processing path definition for {api_definition['path']}", e)
+            raise
 
-    def _run_code_quality_checks(self, files):
-        run_command_with_fix(
-            run_typescript_compiler_for_files,
-            fix_typescript,
-            files,
-            self.destination_folder,
-        )
-        format_files(self.destination_folder)
-        run_linter(self.destination_folder)
+    def _process_verb_definition(
+            self,
+            api_definition: Dict[str, Any],
+            models: List[Dict[str, Any]]
+    ):
+        """Generate tests for a specific verb (HTTP method) in the API definition"""
+        try:
+            self.logger.info(f"Generating tests for path: {api_definition['path']} and verb: {api_definition['verb']}")
+            tests = self.llm_service.generate_first_test(api_definition["yaml"], models)
+            if tests:
+                self.tests_count += 1
+                self._run_code_quality_checks(tests)
+        except Exception as e:
+            self._log_error(f"Error processing verb definition for {api_definition['path']} - {api_definition['verb']}", e)
+            raise
+
+    def _run_code_quality_checks(self, files: List[Dict[str, Any]]):
+        """Run code quality checks including TypeScript compilation, linting, and formatting"""
+        try:
+            def typescript_fix_wrapper(problematic_files, messages):
+                self.llm_service.fix_typescript(problematic_files, messages)
+
+            self.command_service.run_command_with_fix(
+                self.command_service.run_typescript_compiler_for_files,
+                typescript_fix_wrapper,
+                files
+            )
+            self.command_service.format_files()
+            self.command_service.run_linter()
+        except Exception as e:
+            self._log_error("Error during code quality checks", e)
+            raise

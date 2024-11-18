@@ -1,29 +1,31 @@
 import json
+import logging
 import os
 from typing import List, Type, Dict, Any
 
 from langchain_core.tools import BaseTool
-from pydantic import Field, BaseModel
+from pydantic import BaseModel
 
-from src.config import args
+from src.ai_tools.models.file_creation_input import FileCreationInput
+from src.ai_tools.models.file_spec import FileSpec
+from dependency_injector.wiring import inject
 
-
-class FileSpec(BaseModel):
-    path: str = Field(description="The relative file path including the filename")
-    fileContent: str = Field(description="The content to be written to the file")
-
-
-class FileCreationInput(BaseModel):
-    files: List[FileSpec] = Field(
-        description="A list of dicts, each containing a path and fileContent key",
-        examples=[[{"path": "file.txt", "fileContent": "Hello, World!"}]],
-    )
+from ..configuration.config import Config
+from ..utils.logger import Logger
 
 
 class FileCreationTool(BaseTool):
     name: str = "create_files"
     description: str = "Create files with a given content."
     args_schema: Type[BaseModel] = FileCreationInput
+    config: Config = None
+    logger: logging.Logger = None
+
+    @inject
+    def __init__(self, config: Config):
+        super().__init__()
+        self.config = config
+        self.logger = Logger.get_logger(__name__)
 
     def _run(self, files: List[FileSpec]) -> str:
         for file_spec in files:
@@ -31,11 +33,14 @@ class FileCreationTool(BaseTool):
             content = file_spec.fileContent
             if path.startswith("./"):
                 path = path[2:]
-            updated_path = os.path.join(args.destination_folder, path)
+
+            destination_folder = self.config.destination_folder
+            updated_path = os.path.join(destination_folder, path)
+
             os.makedirs(os.path.dirname(updated_path), exist_ok=True)
             with open(updated_path, "w") as f:
                 f.write(content)
-            print(f"Created file: {path}")
+            self.logger.info(f"Created file: {path}")
 
         return json.dumps([file_spec.model_dump() for file_spec in files])
 

@@ -330,7 +330,7 @@ This framework has been extended in the past with different features such as:
 - Database integration
 - And so on...
 
-But each of them depends on the project needs, the tools of choice, etc. Hence, I’ll be adding examples of possible extensions that could be useful for some of you, while leaving this repo as light and starightforward as possible.
+But each of them depends on the project needs, the tools of choice, etc. Hence, I’ll be adding examples of possible extensions that could be useful for some of you, while leaving this repo as light and straightforward as possible.
 
 ## Next steps
 

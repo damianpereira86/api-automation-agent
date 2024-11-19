@@ -1,5 +1,4 @@
 import json
-import logging
 from typing import Any, Dict, List, Optional
 
 from langchain_anthropic import ChatAnthropic
@@ -10,7 +9,7 @@ from langchain_core.tools import BaseTool
 
 from ..configuration.config import Config
 from ..ai_tools.file_creation_tool import FileCreationTool
-from src.ai_tools.tool_converters import convert_tool_for_model
+from ..ai_tools.tool_converters import convert_tool_for_model
 from ..utils.logger import Logger
 
 
@@ -24,7 +23,9 @@ class PromptConfig:
 
 
 class LLMService:
-    """Service for managing language model interactions."""
+    """
+    Service for managing language model interactions.
+    """
 
     def __init__(
             self,
@@ -169,7 +170,7 @@ class LLMService:
             files (List[Dict[str, str]]): Files to fix
             messages (List[str]): Associated error messages
         """
-        self.logger.info("\nFixing TypeScript files:")
+        self.logger.info("Fixing TypeScript files:")
         for file in files:
             self.logger.info(f"  - {file['path']}")
 

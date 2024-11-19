@@ -1,12 +1,15 @@
 import os
 import subprocess
 import logging
-from typing import List, Dict, Tuple, Optional, Callable, Any
+from typing import List, Dict, Tuple, Optional, Callable
 
 from ..configuration.config import Config
 
 
 class CommandService:
+    """
+    Service for running shell commands with real-time output and error handling.
+    """
     def __init__(self, config: Config, logger: Optional[logging.Logger] = None):
         """
         Initialize CommandService with an optional logger.
@@ -122,17 +125,17 @@ class CommandService:
 
     def format_files(self) -> Tuple[bool, str]:
         """Format the generated files"""
-        self._log_message("\nFormatting files...")
+        self._log_message("Formatting files...")
         return self.run_command("npm run prettify")
 
     def run_linter(self) -> Tuple[bool, str]:
         """Run the linter with auto-fix"""
-        self._log_message("\nRunning linter...")
+        self._log_message("Running linter...")
         return self.run_command("npm run lint:fix")
 
     def run_typescript_compiler(self) -> Tuple[bool, str]:
         """Run the TypeScript compiler"""
-        self._log_message("\nRunning TypeScript compiler...")
+        self._log_message("Running TypeScript compiler...")
         return self.run_command("npx tsc --noEmit")
 
     def run_typescript_compiler_for_files(
@@ -146,7 +149,7 @@ class CommandService:
 
     def run_tests(self) -> Tuple[bool, str]:
         """Run all tests"""
-        self._log_message("\nRunning tests...")
+        self._log_message("Running tests...")
         return self.run_command("npm run test")
 
     def run_specific_test(

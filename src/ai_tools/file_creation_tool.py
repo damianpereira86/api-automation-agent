@@ -6,8 +6,8 @@ from typing import List, Type, Dict, Any
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel
 
-from src.ai_tools.models.file_creation_input import FileCreationInput
-from src.ai_tools.models.file_spec import FileSpec
+from .models.file_creation_input import FileCreationInput
+from .models.file_spec import FileSpec
 from dependency_injector.wiring import inject
 
 from ..configuration.config import Config

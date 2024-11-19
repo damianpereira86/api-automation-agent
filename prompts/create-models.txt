@@ -18,7 +18,7 @@ Your task is to create the Service Model file for the path documented on the Ope
 
 ## Output
 
-The ouput must contain the function call for all the files generated.
+The output must contain the function call for all the files generated.
 Generate all files at once.
 Make sure the output is only the function call and nothing else.
 

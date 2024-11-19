@@ -2,7 +2,7 @@ from typing import List
 
 from pydantic import BaseModel, Field
 
-from src.ai_tools.models.file_spec import FileSpec
+from .file_spec import FileSpec
 
 
 class FileCreationInput(BaseModel):

@@ -22,7 +22,7 @@ Your task is to create API automation test code based on an OpenAPI definition u
 
 ## Output
 
-The ouput must contain the function call for all the files generated.
+The output must contain the function call for all the files generated.
 Generate all files at once.
 Make sure the output is only the function call and nothing else.
 

@@ -1,4 +1,3 @@
-import logging
 import os
 import shutil
 from typing import List, Optional
@@ -8,6 +7,9 @@ from src.utils.logger import Logger
 
 
 class FileService:
+    """
+    Service for handling file operations.
+    """
     def __init__(self):
         """
         Initialize FileService.

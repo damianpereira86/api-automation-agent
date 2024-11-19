@@ -1,4 +1,4 @@
-from typing import Union, List, Any
+from typing import List, Any
 
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.tools import BaseTool

@@ -7,6 +7,7 @@ from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import BaseTool
 
+from .file_service import FileService
 from ..configuration.config import Config
 from ..ai_tools.file_creation_tool import FileCreationTool
 from ..ai_tools.tool_converters import convert_tool_for_model
@@ -30,6 +31,7 @@ class LLMService:
     def __init__(
             self,
             config: Config,
+            file_service: FileService,
             tools: Optional[List[BaseTool]] = None
     ):
         """
@@ -41,7 +43,7 @@ class LLMService:
         """
         self.config = config
         self.logger = Logger.get_logger(__name__)
-        self.tools = tools or [FileCreationTool(config)]
+        self.tools = tools or [FileCreationTool(config, file_service)]
 
     def _select_language_model(self) -> BaseLanguageModel:
         """

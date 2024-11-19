@@ -10,6 +10,7 @@ class CommandService:
     """
     Service for running shell commands with real-time output and error handling.
     """
+
     def __init__(self, config: Config, logger: Optional[logging.Logger] = None):
         """
         Initialize CommandService with an optional logger.
@@ -32,11 +33,7 @@ class CommandService:
         log_method = self.logger.error if is_error else self.logger.info
         log_method(message)
 
-    def run_command(
-            self,
-            command: str,
-            cwd: Optional[str] = None
-    ) -> Tuple[bool, str]:
+    def run_command(self, command: str, cwd: Optional[str] = None) -> Tuple[bool, str]:
         """
         Run a shell command with real-time output and error handling.
 
@@ -71,7 +68,14 @@ class CommandService:
                     break
 
             success = process.returncode == 0
-            self._log_message("Command succeeded." if success else "Command failed.", is_error=not success)
+            self._log_message(
+                (
+                    f"\033[92mCommand succeeded.\033[0m"
+                    if success
+                    else f"\033[91mCommand failed.\033[0m"
+                ),
+                is_error=not success,
+            )
             return success, "\n".join(output_lines)
 
         except subprocess.SubprocessError as e:
@@ -82,11 +86,11 @@ class CommandService:
             return False, str(e)
 
     def run_command_with_fix(
-            self,
-            command_func: Callable,
-            fix_func: Optional[Callable] = None,
-            files: Optional[List[Dict[str, str]]] = None,
-            max_retries: int = 3
+        self,
+        command_func: Callable,
+        fix_func: Optional[Callable] = None,
+        files: Optional[List[Dict[str, str]]] = None,
+        max_retries: int = 3,
     ) -> Tuple[bool, str]:
         """
         Execute a command with retries and an optional fix function on failure.
@@ -103,7 +107,11 @@ class CommandService:
         files = files or []
         retry_count = 0
         while retry_count < max_retries:
-            self._log_message(f"Attempt {retry_count + 1}/{max_retries}.")
+            if retry_count > 0:
+                self._log_message(f"\nAttempt {retry_count + 1}/{max_retries}.")
+            elif retry_count == 0:
+                self._log_message("")
+
             success, message = command_func(files)
 
             if success:
@@ -115,47 +123,48 @@ class CommandService:
 
             retry_count += 1
 
-        self._log_message(f"Command failed after {max_retries} attempts.", is_error=True)
+        self._log_message(
+            f"Command failed after {max_retries} attempts.", is_error=True
+        )
         return command_func(files)
 
     def install_dependencies(self) -> Tuple[bool, str]:
         """Install npm dependencies"""
-        self._log_message("Installing dependencies...")
+        self._log_message("\nInstalling dependencies...")
         return self.run_command("npm install --loglevel=error")
 
     def format_files(self) -> Tuple[bool, str]:
         """Format the generated files"""
-        self._log_message("Formatting files...")
+        self._log_message("\nFormatting files...")
         return self.run_command("npm run prettify")
 
     def run_linter(self) -> Tuple[bool, str]:
         """Run the linter with auto-fix"""
-        self._log_message("Running linter...")
+        self._log_message("\nRunning linter...")
         return self.run_command("npm run lint:fix")
 
     def run_typescript_compiler(self) -> Tuple[bool, str]:
         """Run the TypeScript compiler"""
-        self._log_message("Running TypeScript compiler...")
+        self._log_message("\nRunning TypeScript compiler...")
         return self.run_command("npx tsc --noEmit")
 
     def run_typescript_compiler_for_files(
-            self,
-            files: List[Dict[str, str]],
+        self,
+        files: List[Dict[str, str]],
     ) -> Tuple[bool, str]:
         """Run TypeScript compiler for specific files"""
-        self._log_message(f"Running TypeScript compiler for files: {[file['path'] for file in files]}")
+        self._log_message(
+            f"Running TypeScript compiler for files: {[file['path'] for file in files]}"
+        )
         compiler_command = build_typescript_compiler_command(files)
         return self.run_command(compiler_command)
 
     def run_tests(self) -> Tuple[bool, str]:
         """Run all tests"""
-        self._log_message("Running tests...")
+        self._log_message("\nRunning tests...")
         return self.run_command("npm run test")
 
-    def run_specific_test(
-            self,
-            files: List[Dict[str, str]]
-    ) -> Tuple[bool, str]:
+    def run_specific_test(self, files: List[Dict[str, str]]) -> Tuple[bool, str]:
         """Run specific tests"""
         file_paths = " ".join(file["path"] for file in files)
         self._log_message(f"\nRunning tests: {file_paths}")

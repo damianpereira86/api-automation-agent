@@ -16,9 +16,9 @@ from src.utils.logger import Logger
 
 @inject
 def main(
-        logger: logging.Logger,
-        config: Config = Provide[Container.config],
-        framework_generator: FrameworkGenerator = Provide[Container.framework_generator]
+    logger: logging.Logger,
+    config: Config = Provide[Container.config],
+    framework_generator: FrameworkGenerator = Provide[Container.framework_generator],
 ):
     """Main function to orchestrate the API framework generation process."""
     try:
@@ -26,28 +26,30 @@ def main(
 
         args = CLIArgumentParser.parse_arguments()
 
-        config.update({
-            'api_file_path': args.api_file_path,
-            'destination_folder': args.destination_folder or config.destination_folder,
-            'endpoint': args.endpoint,
-            'generate': GenerationOptions(args.generate)
-        })
+        config.update(
+            {
+                "api_file_path": args.api_file_path,
+                "destination_folder": args.destination_folder
+                or config.destination_folder,
+                "endpoint": args.endpoint,
+                "generate": GenerationOptions(args.generate),
+            }
+        )
 
         generate_tests = config.generate == GenerationOptions.MODELS_AND_TESTS
 
-        logger.info(f"API file path: {config.api_file_path}")
+        logger.info(f"\nAPI file path: {config.api_file_path}")
         logger.info(f"Destination folder: {config.destination_folder}")
         logger.info(f"Endpoint: {config.endpoint}")
         logger.info(f"Generate: {config.generate}")
-        logger.info("📢 Press Enter to continue...")
-        input()
+
         api_definitions = framework_generator.process_api_definition()
         framework_generator.setup_framework()
         framework_generator.create_env_file(api_definitions[0])
         framework_generator.process_definitions(api_definitions, generate_tests)
         framework_generator.run_final_checks(generate_tests)
 
-        logger.info("✅ Framework generation completed successfully!")
+        logger.info("\n✅ Framework generation completed successfully!")
     except FileNotFoundError as e:
         logger.error(f"❌ File not found: {e}")
     except PermissionError as e:
@@ -69,7 +71,9 @@ if __name__ == "__main__":
     else:
         config_adapter = DevConfigAdapter()
     processors_adapter = ProcessorsAdapter()
-    container = Container(config_adapter=config_adapter, processors_adapter=processors_adapter)
+    container = Container(
+        config_adapter=config_adapter, processors_adapter=processors_adapter
+    )
 
     # Wire dependencies
     container.init_resources()

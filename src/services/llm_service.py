@@ -15,6 +15,7 @@ from ..utils.logger import Logger
 
 class PromptConfig:
     """Configuration for prompt file paths."""
+
     DOT_ENV = "./prompts/create-dot-env.txt"
     MODELS = "./prompts/create-models.txt"
     FIRST_TEST = "./prompts/create-first-test.txt"
@@ -27,11 +28,7 @@ class LLMService:
     Service for managing language model interactions.
     """
 
-    def __init__(
-            self,
-            config: Config,
-            tools: Optional[List[BaseTool]] = None
-    ):
+    def __init__(self, config: Config, tools: Optional[List[BaseTool]] = None):
         """
         Initialize LLM Service.
 
@@ -55,12 +52,12 @@ class LLMService:
                 return ChatAnthropic(
                     model_name=self.config.model.value,
                     temperature=1,
-                    api_key=self.config.anthropic_api_key
+                    api_key=self.config.anthropic_api_key,
                 )
             return ChatOpenAI(
                 model_name=self.config.model.value,
                 temperature=1,
-                api_key=self.config.openai_api_key
+                api_key=self.config.openai_api_key,
             )
         except Exception as e:
             self.logger.error(f"Model initialization error: {e}")
@@ -84,9 +81,7 @@ class LLMService:
             raise
 
     def create_ai_chain(
-            self,
-            prompt_path: str,
-            additional_tools: Optional[List[BaseTool]] = None
+        self, prompt_path: str, additional_tools: Optional[List[BaseTool]] = None
     ) -> Any:
         """
         Create a flexible AI chain with tool support.
@@ -106,9 +101,7 @@ class LLMService:
                 self._load_prompt(prompt_path)
             )
 
-            converted_tools = [
-                convert_tool_for_model(tool, llm) for tool in all_tools
-            ]
+            converted_tools = [convert_tool_for_model(tool, llm) for tool in all_tools]
             llm_with_tools = llm.bind_tools(converted_tools)
 
             def process_response(response):
@@ -116,10 +109,10 @@ class LLMService:
 
                 if response.tool_calls:
                     tool_call = response.tool_calls[0]
-                    selected_tool = tool_map.get(tool_call['name'].lower())
+                    selected_tool = tool_map.get(tool_call["name"].lower())
 
                     if selected_tool:
-                        return selected_tool.invoke(tool_call['args'])
+                        return selected_tool.invoke(tool_call["args"])
 
                 return response.content
 
@@ -132,37 +125,30 @@ class LLMService:
     def generate_dot_env(self, api_definition: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate .env file configuration."""
         return json.loads(
-            self.create_ai_chain(PromptConfig.DOT_ENV).invoke({
-                "api_definition": api_definition
-            })
+            self.create_ai_chain(PromptConfig.DOT_ENV).invoke(
+                {"api_definition": api_definition}
+            )
         )
 
     def generate_models(self, api_definition: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate models from API definition."""
         return json.loads(
-            self.create_ai_chain(PromptConfig.MODELS).invoke({
-                "api_definition": api_definition
-            })
+            self.create_ai_chain(PromptConfig.MODELS).invoke(
+                {"api_definition": api_definition}
+            )
         )
 
     def generate_first_test(
-            self,
-            api_definition: Dict[str, Any],
-            models: List[Dict[str, Any]]
+        self, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Generate first test for API."""
         return json.loads(
-            self.create_ai_chain(PromptConfig.FIRST_TEST).invoke({
-                "api_definition": api_definition,
-                "models": models
-            })
+            self.create_ai_chain(PromptConfig.FIRST_TEST).invoke(
+                {"api_definition": api_definition, "models": models}
+            )
         )
 
-    def fix_typescript(
-            self,
-            files: List[Dict[str, str]],
-            messages: List[str]
-    ) -> None:
+    def fix_typescript(self, files: List[Dict[str, str]], messages: List[str]) -> None:
         """
         Fix TypeScript files.
 
@@ -170,11 +156,10 @@ class LLMService:
             files (List[Dict[str, str]]): Files to fix
             messages (List[str]): Associated error messages
         """
-        self.logger.info("Fixing TypeScript files:")
+        self.logger.info("\nFixing TypeScript files:")
         for file in files:
             self.logger.info(f"  - {file['path']}")
 
-        self.create_ai_chain(PromptConfig.FIX_TYPESCRIPT).invoke({
-            "files": files,
-            "messages": messages
-        })
+        self.create_ai_chain(PromptConfig.FIX_TYPESCRIPT).invoke(
+            {"files": files, "messages": messages}
+        )

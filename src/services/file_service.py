@@ -2,7 +2,7 @@ import os
 import shutil
 from typing import List, Optional
 
-from src.ai_tools.file_creation_tool import FileSpec
+from src.ai_tools.models.file_spec import FileSpec
 from src.utils.logger import Logger
 
 
@@ -52,13 +52,16 @@ class FileService:
         for file_spec in files:
             try:
                 path = file_spec.path
-                content = file_spec.file_content
-                full_path = os.path.join(destination_folder, path)
-                os.makedirs(os.path.dirname(full_path), exist_ok=True)
-                with open(full_path, "w") as f:
+                content = file_spec.fileContent
+                if path.startswith("./"):
+                    path = path[2:]
+                updated_path = os.path.join(destination_folder, path)
+                os.makedirs(os.path.dirname(updated_path), exist_ok=True)
+                with open(updated_path, "w") as f:
                     f.write(content)
-                self.logger.info(f"Created file: {full_path}")
-                created_files.append(full_path)
+
+                self.logger.info(f"Created file: {path}")
+                created_files.append(updated_path)
             except Exception as e:
                 self.logger.error(f"Failed to create file {file_spec.path}: {e}")
         return created_files

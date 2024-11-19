@@ -4,7 +4,6 @@ from src.services.command_service import CommandService
 from src.services.llm_service import LLMService
 from src.services.file_service import FileService
 
-
 from dependency_injector import containers, providers
 
 
@@ -24,16 +23,17 @@ class Container(containers.DeclarativeContainer):
     swagger_processor = processors_adapter.swagger_processor
 
     # Services
+    file_service = providers.Factory(
+        FileService
+    )
     llm_service = providers.Factory(
         LLMService,
         config=config,
+        file_service=file_service,
     )
     command_service = providers.Factory(
         CommandService,
         config=config,
-    )
-    file_service = providers.Factory(
-        FileService
     )
 
     # Framework generator

@@ -1,6 +1,5 @@
 import json
 import logging
-import os
 from typing import List, Type, Dict, Any
 
 from langchain_core.tools import BaseTool
@@ -8,10 +7,10 @@ from pydantic import BaseModel
 
 from .models.file_creation_input import FileCreationInput
 from .models.file_spec import FileSpec
-from dependency_injector.wiring import inject
 
 from ..configuration.config import Config
 from ..utils.logger import Logger
+from ..services.file_service import FileService
 
 
 class FileCreationTool(BaseTool):
@@ -19,30 +18,26 @@ class FileCreationTool(BaseTool):
     description: str = "Create files with a given content."
     args_schema: Type[BaseModel] = FileCreationInput
     config: Config = None
+    file_service: FileService = None
     logger: logging.Logger = None
 
-    @inject
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, file_service: FileService):
         super().__init__()
         self.config = config
+        self.file_service = file_service
         self.logger = Logger.get_logger(__name__)
 
     def _run(self, files: List[FileSpec]) -> str:
-        for file_spec in files:
-            path = file_spec.path
-            content = file_spec.fileContent
-            if path.startswith("./"):
-                path = path[2:]
-
-            destination_folder = self.config.destination_folder
-            updated_path = os.path.join(destination_folder, path)
-
-            os.makedirs(os.path.dirname(updated_path), exist_ok=True)
-            with open(updated_path, "w") as f:
-                f.write(content)
-            self.logger.info(f"Created file: {path}")
-
-        return json.dumps([file_spec.model_dump() for file_spec in files])
+        try:
+            created_files = self.file_service.create_files(
+                destination_folder=self.config.destination_folder,
+                files=files
+            )
+            self.logger.info(f"Successfully created {len(created_files)} files")
+            return json.dumps([file_spec.model_dump() for file_spec in files])
+        except Exception as e:
+            self.logger.error(f"Error creating files: {e}")
+            raise
 
     async def _arun(self, files: List[FileSpec]) -> str:
         return self._run(files)

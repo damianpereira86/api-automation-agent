@@ -41,6 +41,9 @@ class Logger:
 
 
 class MultilineFileHandler(logging.FileHandler):
+    def __init__(self, filename, mode="a", encoding="utf-8", delay=False):
+        super().__init__(filename, mode, encoding, delay)
+
     def emit(self, record):
         try:
             if not isinstance(record.msg, str):
@@ -56,13 +59,6 @@ class MultilineFileHandler(logging.FileHandler):
             for message in messages:
                 new_record = logging.makeLogRecord(record.__dict__)
                 new_record.msg = message
-
-                try:
-                    msg = self.format(new_record)
-                    stream = self.stream
-                    stream.write(msg + self.terminator)
-                    stream.flush()
-                except Exception:
-                    self.handleError(new_record)
+                super().emit(new_record)
         except Exception:
             self.handleError(record)

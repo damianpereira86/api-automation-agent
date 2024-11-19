@@ -7,8 +7,7 @@ class CLIArgumentParser:
     def parse_arguments():
         parser = argparse.ArgumentParser(description="API Framework Generation Tool")
         parser.add_argument(
-            "api_file_path",
-            help="The path of the OpenAPI definition file to process."
+            "api_file_path", help="The path of the OpenAPI definition file to process."
         )
         parser.add_argument(
             "--destination-folder",
@@ -24,8 +23,8 @@ class CLIArgumentParser:
         parser.add_argument(
             "--generate",
             type=str,
-            choices=["models", "models-and-tests"],
-            default="models",
-            help="Specify what to generate. 'models' for models only, 'models-and-tests' for models and tests.",
+            choices=["models", "models_and_tests"],
+            default="models_and_tests",
+            help="Specify what to generate. 'models' for models only, 'models_and_tests' for models and tests.",
         )
         return parser.parse_args()

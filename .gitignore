@@ -64,5 +64,6 @@ target/
 # Idea
 /.idea
 
-# FrameWork results
+# Framework results
 /generated/*
+/logs/*

@@ -10,10 +10,10 @@
     "totalprice"
   ],
   "[javascript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "[typescript]": {
-    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
   },
   "editor.formatOnSave": true,
   "todohighlight.keywords": [
@@ -21,7 +21,7 @@
     {
         "text": "BUG:",
         "color": "white",
-        "backgroundColor": "red",
+        "backgroundColor": "red"
     }
   ],
 }

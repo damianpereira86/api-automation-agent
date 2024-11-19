@@ -10,6 +10,5 @@ class Model(Enum):
     GPT_3_5_TURBO = "gpt-3.5-turbo"
     CLAUDE_SONNET = "claude-3-5-sonnet-20241022"
 
-    @staticmethod
-    def is_anthropic(model):
-        return model in [Model.CLAUDE_SONNET]
+    def is_anthropic(self):
+        return self.value in [Model.CLAUDE_SONNET]

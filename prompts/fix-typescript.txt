@@ -14,7 +14,7 @@ Your primary task is to fix TypeScript compiler errors in API automation test co
 
 ## Output
 
-The ouput must contain the function call for all the files generated.
+The output must contain the function call for all the files generated.
 Generate all files at once.
 Make sure the output is only the function call and nothing else.
 

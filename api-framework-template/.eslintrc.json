@@ -9,9 +9,9 @@
   ],
   "plugins": ["ui-testing"],
   "rules": {
-    "ui-testing/no-disabled-tests": "error", // default = warn
-    "ui-testing/no-focused-tests": "error", // default = warn
-    "@typescript-eslint/no-explicit-any": "off", // default = warn
+    "ui-testing/no-disabled-tests": "error",
+    "ui-testing/no-focused-tests": "error",
+    "@typescript-eslint/no-explicit-any": "off",
     "@typescript-eslint/no-non-null-assertion": "off"
   }
 }

@@ -62,7 +62,7 @@ class CommandService:
                 output = process.stdout.readline()
                 if output:
                     output_lines.append(output.rstrip())
-                    print(output.rstrip(), flush=True)  # Force flush after each line
+                    self._log_message(output.rstrip())
 
                 if output == "" and process.poll() is not None:
                     break

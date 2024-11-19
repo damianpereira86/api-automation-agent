@@ -19,7 +19,7 @@ class Logger:
         stdout_handler.setLevel(log_level)
         stdout_handler.setFormatter(logging.Formatter(stdout_format))
 
-        file_handler = logging.FileHandler(
+        file_handler = MultilineFileHandler(
             "logs/" + config.destination_folder.split("/")[-1] + ".log"
         )
         file_handler.setLevel(logging.DEBUG)
@@ -35,3 +35,24 @@ class Logger:
     @staticmethod
     def get_logger(name: str):
         return logging.getLogger(name)
+
+
+class MultilineFileHandler(logging.FileHandler):
+    def emit(self, record):
+        try:
+            if not isinstance(record.msg, str):
+                record.msg = str(record.msg)
+
+            messages = [
+                message for message in record.msg.split("\n") if message.strip()
+            ]
+
+            if not messages:
+                return
+
+            for message in messages:
+                new_record = logging.makeLogRecord(record.__dict__)
+                new_record.msg = message
+                super().emit(new_record)
+        except Exception:
+            self.handleError(record)

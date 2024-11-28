@@ -6,7 +6,7 @@ An open-source AI Agent that automatically generates an automation framework fro
 
 - Generates type-safe service and data models
 - Generates test suites for every endpoint
-- Uses AI to review and fix code issues and ensure code quality and best practices
+- Reviewes and fixes code issues and ensures code quality and best practices
 - Includes code formatting and linting
 - Runs tests with detailed reporting and assertions
 
@@ -14,7 +14,7 @@ An open-source AI Agent that automatically generates an automation framework fro
 
 - Python 3.8 or higher
 - Node.js 18 or higher
-- OpenAI API key or Anthropic API key
+- OpenAI API key or Anthropic API key (Anthropic API key required by default)
 
 ## Installation
 
@@ -39,6 +39,10 @@ An open-source AI Agent that automatically generates an automation framework fro
     OPENAI_API_KEY=your_openai_api_key_here
     ANTHROPIC_API_KEY=your_anthropic_api_key_here
     ```
+
+## LLMs
+
+The default model is Claude 3.5 Sonnet (claude-3-5-sonnet-20241022), which provides a good balance between performance and cost. Currently, both Anthropic (Claude) and OpenAI (GPT) models are supported. You can modify the model in the `config.py` file if needed. 
 
 ## Usage
 

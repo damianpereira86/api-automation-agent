@@ -59,11 +59,12 @@ python ./main.py path/to/your/openapi.yaml
 - `--generate`: Specify what to generate (default: models_and_tests)
   - `models`: Generate only the data models
   - `models_and_tests`: Generate both data models and test suites
+- `--use-existing-framework`: Use an existing framework instead of creating a new one
 
 ### Example
 
 ```bash
-python ./main.py api-spec.yaml --destination-folder ./my-api-client
+python ./main.py api-spec.yaml --destination-folder ./my-api-client --use-existing-framework
 ```
 
 The generated framework will be created in your specified destination folder.

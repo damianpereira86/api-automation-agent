@@ -55,8 +55,6 @@ def main(
             framework_generator.setup_framework()
             framework_generator.create_env_file(api_definitions[0])
 
-        framework_generator.setup_framework()
-        framework_generator.create_env_file(api_definitions[0])
         framework_generator.process_definitions(api_definitions, config.generate)
         framework_generator.run_final_checks(config.generate)
 

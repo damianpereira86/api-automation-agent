@@ -77,6 +77,7 @@ python ./main.py path/to/your/openapi.yaml
 ### Options
 
 - `--destination-folder`: Specify output directory (default: ./generated-framework_[timestamp])
+- `--use-existing-framework`: Use an existing framework instead of creating a new one
 - `--endpoint`: Generate framework for a specific endpoint only
 - `--generate`: Specify what to generate (default: models_and_tests)
   - `models`: Generate only the data models

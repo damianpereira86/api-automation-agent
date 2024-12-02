@@ -26,6 +26,11 @@ def main(
 
         args = CLIArgumentParser.parse_arguments()
 
+        if args.use_existing_framework and not args.destination_folder:
+            raise ValueError(
+                "The destination folder parameter must be set when using an existing framework."
+            )
+
         config.update(
             {
                 "api_file_path": args.api_file_path,
@@ -33,16 +38,23 @@ def main(
                 or config.destination_folder,
                 "endpoint": args.endpoint,
                 "generate": GenerationOptions(args.generate),
+                "use_existing_framework": args.use_existing_framework,
             }
         )
 
         logger.info(f"\nAPI file path: {config.api_file_path}")
         logger.info(f"Destination folder: {config.destination_folder}")
+        logger.info(f"Use existing framework: {config.use_existing_framework}")
         logger.info(f"Endpoint: {config.endpoint}")
         logger.info(f"Generate: {config.generate}")
         logger.info(f"Model: {config.model}")
 
         api_definitions = framework_generator.process_api_definition()
+
+        if not config.use_existing_framework:
+            framework_generator.setup_framework()
+            framework_generator.create_env_file(api_definitions[0])
+
         framework_generator.setup_framework()
         framework_generator.create_env_file(api_definitions[0])
         framework_generator.process_definitions(api_definitions, config.generate)

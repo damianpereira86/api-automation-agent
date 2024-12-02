@@ -27,4 +27,9 @@ class CLIArgumentParser:
             default="models_and_tests",
             help="Specify what to generate. 'models' for models only, 'models_and_tests' for models and tests.",
         )
+        parser.add_argument(
+            "--github-api-key",
+            type=str,
+            help="GitHub API key to create a repository (optional).",
+        )
         return parser.parse_args()

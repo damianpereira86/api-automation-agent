@@ -6,6 +6,7 @@ from .services.command_service import CommandService
 from .services.file_service import FileService
 from .services.llm_service import LLMService
 from .utils.logger import Logger
+from github import Github
 
 
 class FrameworkGenerator:
@@ -160,4 +161,17 @@ class FrameworkGenerator:
             self.command_service.run_linter()
         except Exception as e:
             self._log_error("Error during code quality checks", e)
+            raise
+
+    def create_github_repo(self):
+        """Create a new GitHub repository using the provided GitHub API key"""
+        try:
+            self.logger.info("\nCreating GitHub repository")
+            g = Github(self.config.github_api_key)
+            user = g.get_user()
+            repo_name = self.config.destination_folder.split('/')[-1]
+            repo = user.create_repo(repo_name)
+            self.logger.info(f"GitHub repository '{repo_name}' created successfully")
+        except Exception as e:
+            self._log_error("Error creating GitHub repository", e)
             raise

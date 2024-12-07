@@ -64,7 +64,7 @@ class FrameworkGenerator:
             self._log_error("Error creating .env file", e)
             raise
 
-    def process_definitions(
+    def generate(
         self,
         merged_api_definition_list: List[Dict[str, Any]],
         generate_tests: GenerationOptions,
@@ -79,14 +79,12 @@ class FrameworkGenerator:
                     continue
 
                 if api_definition["type"] == "path":
-                    models = self._process_path_definition(api_definition)
+                    models = self._generate_models(api_definition)
                 elif api_definition["type"] == "verb" and generate_tests in (
                     GenerationOptions.MODELS_AND_FIRST_TEST,
                     GenerationOptions.MODELS_AND_TESTS,
                 ):
-                    self._process_verb_definition(
-                        api_definition, models, generate_tests
-                    )
+                    self._generate_tests(api_definition, models, generate_tests)
 
             self.logger.info(
                 f"\nGeneration complete. {self.models_count} models and {self.tests_count} tests were generated."
@@ -116,7 +114,7 @@ class FrameworkGenerator:
         """Check if an endpoint should be processed based on configuration"""
         return self.config.endpoint is None or self.config.endpoint == path
 
-    def _process_path_definition(
+    def _generate_models(
         self, api_definition: Dict[str, Any]
     ) -> Optional[List[Dict[str, Any]]]:
         """Process a path definition and generate models"""
@@ -133,7 +131,7 @@ class FrameworkGenerator:
             )
             raise
 
-    def _process_verb_definition(
+    def _generate_tests(
         self,
         api_definition: Dict[str, Any],
         models: List[Dict[str, Any]],

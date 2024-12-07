@@ -58,15 +58,46 @@ python ./main.py path/to/your/openapi.yaml
 - `--endpoint`: Generate framework for a specific endpoint only
 - `--generate`: Specify what to generate (default: models_and_tests)
   - `models`: Generate only the data models
-  - `models_and_tests`: Generate both data models and test suites
+  - `models_and_first_test`: Generate data models and the first test for each endpoint
+  - `models_and_tests`: Generate data models and complete test suites
 
-### Example
+### Examples
 
 ```bash
-python ./main.py api-spec.yaml --destination-folder ./my-api-client
+# Generate complete framework with all endpoints
+python ./main.py api-spec.yaml --destination-folder ./my-api-framework
 ```
 
-The generated framework will be created in your specified destination folder.
+```bash
+# Generate framework for a specific endpoint only
+python ./main.py api-spec.yaml --endpoint /user
+```
+
+```bash
+# Generate only data models for all endpoints
+python ./main.py api-spec.yaml --generate models
+```
+
+```bash
+# Generate models and first test for each endpoint in a custom folder
+python ./main.py api-spec.yaml --generate models_and_first_test --destination-folder ./quick-tests
+```
+
+```bash
+# Combine options to generate specific endpoint with first test only
+python ./main.py api-spec.yaml --endpoint /pet --generate models_and_first_test
+```
+
+The generated framework will follow the structure:
+```
+generated-framework_[timestamp]/
+├── src/
+│   ├── models/        # Generated TypeScript interfaces
+│   ├── services/      # API service classes
+│   └── tests/         # Generated test suites
+├── package.json
+└── tsconfig.json
+```
 
 ## Testing the Agent
 

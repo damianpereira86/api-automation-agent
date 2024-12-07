@@ -33,6 +33,7 @@ def main(
                 or config.destination_folder,
                 "endpoint": args.endpoint,
                 "generate": GenerationOptions(args.generate),
+                "github_api_key": args.github_api_key,
             }
         )
 
@@ -47,6 +48,9 @@ def main(
         framework_generator.create_env_file(api_definitions[0])
         framework_generator.process_definitions(api_definitions, config.generate)
         framework_generator.run_final_checks(config.generate)
+
+        if config.github_api_key:
+            framework_generator.create_github_repo()
 
         logger.info("\n✅ Framework generation completed successfully!")
     except FileNotFoundError as e:

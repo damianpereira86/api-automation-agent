@@ -36,18 +36,17 @@ def main(
             }
         )
 
-        generate_tests = config.generate == GenerationOptions.MODELS_AND_TESTS
-
         logger.info(f"\nAPI file path: {config.api_file_path}")
         logger.info(f"Destination folder: {config.destination_folder}")
         logger.info(f"Endpoint: {config.endpoint}")
         logger.info(f"Generate: {config.generate}")
+        logger.info(f"Model: {config.model}")
 
         api_definitions = framework_generator.process_api_definition()
         framework_generator.setup_framework()
         framework_generator.create_env_file(api_definitions[0])
-        framework_generator.process_definitions(api_definitions, generate_tests)
-        framework_generator.run_final_checks(generate_tests)
+        framework_generator.process_definitions(api_definitions, config.generate)
+        framework_generator.run_final_checks(config.generate)
 
         logger.info("\n✅ Framework generation completed successfully!")
     except FileNotFoundError as e:

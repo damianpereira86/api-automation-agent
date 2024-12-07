@@ -1,6 +1,6 @@
 from typing import Optional, List, Dict, Any
 
-from .configuration.config import Config
+from .configuration.config import Config, GenerationOptions
 from .processors.swagger_processor import SwaggerProcessor
 from .services.command_service import CommandService
 from .services.file_service import FileService
@@ -67,7 +67,7 @@ class FrameworkGenerator:
     def process_definitions(
         self,
         merged_api_definition_list: List[Dict[str, Any]],
-        generate_tests: bool = True,
+        generate_tests: GenerationOptions,
     ):
         """Process the API definitions and generate models and tests"""
         try:
@@ -80,8 +80,13 @@ class FrameworkGenerator:
 
                 if api_definition["type"] == "path":
                     models = self._process_path_definition(api_definition)
-                elif generate_tests and api_definition["type"] == "verb":
-                    self._process_verb_definition(api_definition, models)
+                elif api_definition["type"] == "verb" and generate_tests in (
+                    GenerationOptions.MODELS_AND_FIRST_TEST,
+                    GenerationOptions.MODELS_AND_TESTS,
+                ):
+                    self._process_verb_definition(
+                        api_definition, models, generate_tests
+                    )
 
             self.logger.info(
                 f"\nGeneration complete. {self.models_count} models and {self.tests_count} tests were generated."
@@ -90,13 +95,16 @@ class FrameworkGenerator:
             self._log_error("Error processing definitions", e)
             raise
 
-    def run_final_checks(self, generate_tests: bool = True):
+    def run_final_checks(self, generate_tests: GenerationOptions):
         """Run final checks like TypeScript compilation and tests"""
         try:
             result = self.command_service.run_typescript_compiler()
             success, _ = result
 
-            if success and generate_tests:
+            if success and generate_tests in (
+                GenerationOptions.MODELS_AND_FIRST_TEST,
+                GenerationOptions.MODELS_AND_TESTS,
+            ):
                 self.command_service.run_tests()
 
             self.logger.info("Final checks completed")
@@ -126,20 +134,48 @@ class FrameworkGenerator:
             raise
 
     def _process_verb_definition(
-        self, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
+        self,
+        api_definition: Dict[str, Any],
+        models: List[Dict[str, Any]],
+        generate_tests: GenerationOptions,
     ):
         """Generate tests for a specific verb (HTTP method) in the API definition"""
         try:
             self.logger.info(
-                f"\nGenerating tests for path: {api_definition['path']} and verb: {api_definition['verb']}"
+                f"\nGenerating first test for path: {api_definition['path']} and verb: {api_definition['verb']}"
             )
             tests = self.llm_service.generate_first_test(api_definition["yaml"], models)
             if tests:
                 self.tests_count += 1
                 self._run_code_quality_checks(tests)
+                if generate_tests == GenerationOptions.MODELS_AND_TESTS:
+                    self._generate_additional_tests(tests, models, api_definition)
         except Exception as e:
             self._log_error(
                 f"Error processing verb definition for {api_definition['path']} - {api_definition['verb']}",
+                e,
+            )
+            raise
+
+    def _generate_additional_tests(
+        self,
+        tests: List[Dict[str, Any]],
+        models: List[Dict[str, Any]],
+        api_definition: Dict[str, Any],
+    ):
+        """Generate additional tests based on the initial test and models"""
+        try:
+            self.logger.info(
+                f"\nGenerating additional tests for path: {api_definition['path']} and verb: {api_definition['verb']}"
+            )
+            additional_tests = self.llm_service.generate_additional_tests(
+                tests, models, api_definition["yaml"]
+            )
+            if additional_tests:
+                self._run_code_quality_checks(additional_tests)
+        except Exception as e:
+            self._log_error(
+                f"Error generating additional tests for {api_definition['path']} - {api_definition['verb']}",
                 e,
             )
             raise

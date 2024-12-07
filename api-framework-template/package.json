@@ -5,11 +5,12 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha src/**/*.spec.ts --timeout 10000",
+    "test:parallel": "mocha src/**/*.spec.ts --timeout 10000 --parallel",
     "smoke": "mocha src/**/*.spec.ts --grep @Smoke --timeout 10000",
     "regression": "mocha src/**/*.spec.ts --grep @Regression --timeout 10000",
     "lint": "npx eslint src",
     "lint:fix": "npx eslint src --fix",
-    "prettier-check": "prettier --check src",
+    "prettier:check": "prettier --check src",
     "prettify": "prettier --write src"
   },
   "author": "",

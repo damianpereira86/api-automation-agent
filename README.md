@@ -40,9 +40,31 @@ An open-source AI Agent that automatically generates an automation framework fro
     ANTHROPIC_API_KEY=your_anthropic_api_key_here
     ```
 
-## LLMs
+## Large Language Models
 
-The default model is Claude 3.5 Sonnet (claude-3-5-sonnet-20241022), which provides a good balance between performance and cost. Currently, both Anthropic (Claude) and OpenAI (GPT) models are supported. You can modify the model in the `config.py` file if needed. 
+This project supports both Anthropic and OpenAI language models:
+
+### Default Model
+**Claude 3.5 Sonnet** (claude-3-5-sonnet-20241022) is the default and recommended model
+- Provides superior code generation and understanding
+- Offers the best balance of performance and cost
+
+### Supported Models
+**Anthropic**
+  - Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)
+
+**OpenAI**
+  - GPT-4o (gpt-4o)
+  - GPT-4o Mini (gpt-4o-mini)
+  - GPT-4 Turbo (gpt-4-turbo)
+  - GPT-3.5 Turbo (gpt-3.5-turbo)
+  - O1 Preview (o1-preview)
+  - O1 Mini (o1-mini)
+
+You can configure your preferred model in the `.env` file:
+```env
+MODEL=claude-3-5-sonnet-20241022  # Default value
+```
 
 ## Usage
 

@@ -95,7 +95,7 @@ In case you want run it separately use the folowing scripts:
 - Check for issues:
     
     ```bash
-    npm run check
+    npm run prettier:check
     ```
     
 - Resolve issues:

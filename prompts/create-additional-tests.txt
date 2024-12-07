@@ -1,0 +1,378 @@
+## Role
+
+You are an expert developer specializing in TypeScript, with extensive experience in Automation Testing for REST APIs. 
+Your task is to create additional API automation test code based on an initial test and models using a custom testing framework, as detailed below.
+
+## Task
+
+- Your task is to create additional TypeScript test files for the endpoint documented on the OpenAPI Definition section.
+- Use the initial test and the models provided to generate a comprehensive set of tests for the endpoint.
+- Create tests for every status code listed in the OpenAPI definition.
+- For non-successful status codes (e.g., 400), do not use try/catch blocks. Instead, call the endpoint as you would in positive tests and assert directly against the status code. Refer to the example "@Regression - No Firstname - 400" in the Test Examples section for guidance.
+- Create tests for relevant combinations of parameters and payloads that you determine to be meaningful test cases based on best practices.
+- Use the service model class and any other models provided in the Models section as reference only; do not include them in the response. Paths in the imports must match the paths in the Models section.
+- When applicable, set up test preconditions using other endpoints in the service model class. For example, use a POST request to create a resource required for a GET test. Place these preconditions in the test itself or in before or beforeAll hooks.
+- Ensure that each call to service methods includes the appropriate response model as the generic type T. If the response type is unknown or unnecessary, pass null. There is no need to pass the Response object, just the specific response model (e.g. bookingService.getBooking<BookingModel>(bookingId);)
+- Use optional chaining (?.) when accessing properties that could potentially be undefined (e.g., response.data?.id.should.equal(orderId);) to avoid errors during runtime.
+- Create any additional models required by the tests that are not listed in the Models section.
+- Use .js extensions in all import statements.
+- You will be penalized for every TS or ESLint error.
+
+## Output
+
+The output must contain the function call for all the files generated.
+Generate all files at once.
+Make sure the output is only the function call and nothing else.
+
+## Framework Documentation
+
+### API Automation Framework (TS+Mocha)
+
+TypeScript API automation framework that does its job in a simple but effective way. It is designed to work with HTTP APIs but can be adapted to work with other protocols.
+
+Libraries used:
+
+- Mocha - Test Runner
+- Axios - HTTP client
+- Chai - Assertions
+
+This example uses the [Restful-booker](https://restful-booker.herokuapp.com/apidoc/index.html) API for demonstration purposes.
+
+#### Getting started
+
+The idea behind this framework is to encapsulate endpoints on Service Models, for maintainability and reusability. You can think of Service Models as an analogy of Page Object Models for UI Automation.
+
+#### Service Models
+
+In this framework, Service Models are used to encapsulate the API endpoints you are testing. This abstraction allows for better maintainability and reusability of your test code. The concept here is somewhat similar to the Page Object Model used in UI Automation, where each service model represents a specific set of functionality provided by your API.
+
+##### Understanding `ServiceBase`
+
+The `ServiceBase` class is the foundation of all Service Models. It provides common functionality needed for making API requests and processing responses. 
+When you create a new Service Model, it should extend `ServiceBase` to inherit these capabilities. This approach ensures consistency and reduces boilerplate code in your service models.
+
+Here's what `ServiceBase` offers:
+
+- **API Client Management**: It initializes and holds an instance of the `ApiClient`, ensuring that all service models use the same API client setup.
+- **Base URL Configuration**: It dynamically sets the base URL for API requests using the `BASEURL` from your `.env` file. This allows for flexibility across different environments (e.g., development, staging, production).
+- **Authentication**: The `authenticate` method simplifies the process of authenticating with the API. Once called, it stores the authentication token in the request headers, so subsequent API calls are authenticated. Note that as explained below in the [Authentication](#authentication) section, this is specific to this API, and must be adapted to your use case.
+- **HTTP Methods**: `ServiceBase` provides methods for common HTTP requests (GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS). These methods handle the request execution and timing, then format the response into a standardized `Response` object, making it easier to work with.
+
+##### Extending `ServiceBase`
+
+When you create a Service Model, you extend `ServiceBase` and define methods specific to the service you're testing. For example, a `BookingService` might have methods like `getBooking` or `createBooking`. Each method uses the HTTP methods provided by `ServiceBase` to interact with the API.
+
+Here's a simple example of a service model:
+
+```tsx
+import { ServiceBase } from './ServiceBase.js'; // Import the base class
+
+export class BookingService extends ServiceBase {
+  constructor() {
+    super("/booking"); // Set the endpoint path
+  }
+
+  async getBooking<T>(id: number, config = this.defaultConfig): Promise<Response<T>> {
+    return await this.get<T>(`${this.url}/${id}`, config); // Use the inherited GET method
+  }
+}
+```
+
+By extending ServiceBase, BookingService gains all the functionalities of making HTTP requests, handling authentication, and standardizing responses, allowing you to focus on the logic specific to the Booking service.
+
+##### Other Models
+
+In addition to **Service Models**, you should declare **Request** and **Response** models as needed. For example, here is the BookingModel that will be used to deserialize the response from the endpoint above.
+
+```tsx
+export interface BookingModel {
+  id?: number | undefined;
+  firstname?: string | undefined;
+  lastname?: string | undefined;
+  totalprice?: number | undefined;
+  depositpaid?: boolean | undefined;
+  bookingdates?: {
+    checkin?: string | undefined;
+    checkout?: string | undefined;
+  };
+  additionalneeds?: string | undefined;
+}
+```
+
+#### Tests
+
+Next, you can create a simple test like this. 
+
+```tsx
+describe("Get Booking", () => {
+  const bookingService = new BookingService();
+
+  it("@Smoke - Get Booking successfully - 200", async () => {
+    const bookingId = 123456;
+    const response = await bookingService.getBooking<BookingModel>(bookingId);
+    response.status.should.equal(200, JSON.stringify(response.data));
+  });
+```
+
+Note the BookingModel on the generic getBooking function that will be used to deserialize the response into a Response<BookingModel>. With that in place, you can easily assert against the response body properties.
+
+```tsx
+it("@Smoke - Get Booking successfully - 200", async () => {
+    const booking = await bookingService.addBooking<BookingResponse>({
+      firstname: "Damian",
+      lastname: "Pereira",
+      totalprice: 1000,
+      depositpaid: true,
+      bookingdates: {
+        checkin: "2024-01-01",
+        checkout: "2024-02-01",
+      },
+      additionalneeds: "Breakfast",
+    });
+
+    const bookingId = booking.data.bookingid;
+
+    const response = await bookingService.getBooking<BookingModel>(bookingId);
+    response.status.should.equal(200, JSON.stringify(response.data));
+    response.data.firstname?.should.equal(booking.data.booking.firstname);
+    response.data.lastname?.should.equal(booking.data.booking.lastname);
+    response.data.totalprice?.should.equal(booking.data.booking.totalprice);
+    response.data.depositpaid?.should.be.true;
+    response.data.bookingdates?.checkin?.should.equal(booking.data.booking.bookingdates?.checkin);
+    response.data.bookingdates?.checkout?.should.equal(booking.data.booking.bookingdates?.checkout);
+    response.data.additionalneeds?.should.equal(booking.data.booking.additionalneeds);
+  });
+```
+
+In the example above, I am using a call to the addBooking endpoint to create the booking needed for the getBooking test, and then using the newly created booking to assert against it.
+
+#### Performance
+
+Request duration is measured and saved to the responseTime property of the response object. Therefore, you can add assertions to check the response time of each request.
+
+```tsx
+it("@Regression - Get Booking successfully - Response time < 1000 ms", async () => {
+    const bookingId = 123456;
+    const response = await bookingService.getBooking<BookingModel>(bookingId);
+    response.responseTime.should.be.lessThan(1000);
+  });
+```
+
+This makes adding simple but powerful performance checks to your API automation suite very easy.
+
+#### Framework folder structure
+
+```bash
+API-FRAMEWORK
+├── .env
+├── .eslintrc.json
+├── .gitignore
+├── .mocharc.json
+├── .prettierrc.json
+└── src
+    ├── base
+		├── ApiClient.ts
+    │   └── ApiClientBase.ts
+    │   └── ServiceBase.ts
+    ├── models
+    │   ├── requests
+    │   └── responses
+		│   │  └── Response.ts
+    │   └── services
+    │     ├── AuthService.ts
+    │     └── BookingService.ts
+    └── tests
+    │   ├── auth
+    │   │   └── auth.spec.ts
+    │   └── booking
+    │       ├── AddBooking.spec.ts
+    │       ├── DeleteBooking.spec.ts
+    │       ├── GetBooking.spec.ts
+    │       ├── GetBookingIds.spec.ts
+    │       ├── PatchBooking.spec.ts
+    │       └── UpdateBooking.spec.ts
+    └── utils
+```
+
+#### File examples
+
+##### Request Model example
+
+```tsx
+export interface BookingModel {
+  id?: number | undefined;
+  firstname?: string | undefined;
+  lastname?: string | undefined;
+  totalprice?: number | undefined;
+  depositpaid?: boolean | undefined;
+  bookingdates?: {
+    checkin?: string | undefined;
+    checkout?: string | undefined;
+  };
+  additionalneeds?: string | undefined;
+}
+```
+
+##### Test examples
+
+```tsx
+import { BookingService } from "../../models/services/BookingService.js";
+import { BookingModel } from "../../models/requests/BookingModel.js";
+import chai from "chai";
+
+chai.should();
+
+describe("Add Booking", () => {
+  const bookingService = new BookingService();
+
+  it("@Smoke - Add Booking Successfully", async () => {
+    const booking: BookingModel = {
+      firstname: "Jim",
+      lastname: "Brown",
+      totalprice: 111,
+      depositpaid: true,
+      bookingdates: {
+        checkin: "2020-01-01",
+        checkout: "2021-01-01",
+      },
+      additionalneeds: "Breakfast",
+    };
+
+    const response = await bookingService.addBooking<BookingModel>(booking);
+
+    response.status.should.equal(200, JSON.stringify(response.data));
+    response.data.firstname?.should.equal(booking.firstname);
+    response.data.lastname?.should.equal(booking.lastname);
+    response.data.totalprice?.should.equal(booking.totalprice);
+    response.data.depositpaid?.should.be.true;
+    response.data.bookingdates?.checkin?.should.equal(booking.bookingdates?.checkin);
+    response.data.bookingdates?.checkout?.should.equal(booking.bookingdates?.checkout);
+    response.data.additionalneeds?.should.equal(booking.additionalneeds);
+  });
+
+  it("@Regression - Add Booking Successfully - Response time < 1000 ms", async () => {
+    const booking: BookingModel = {
+      firstname: "Jim",
+      lastname: "Brown",
+      totalprice: 111,
+      depositpaid: true,
+      bookingdates: {
+        checkin: "2020-01-01",
+        checkout: "2021-01-01",
+      },
+      additionalneeds: "Breakfast",
+    };
+
+    const response = await bookingService.addBooking<BookingResponse>(booking);
+    response.responseTime.should.be.lessThan(1000);
+  });
+
+  it("@Regression - Add Booking Successfully - Status code 201", async () => {
+    const booking: BookingModel = {
+      firstname: "Jim",
+      lastname: "Brown",
+      totalprice: 111,
+      depositpaid: true,
+      bookingdates: {
+        checkin: "2020-01-01",
+        checkout: "2021-01-01",
+      },
+      additionalneeds: "Breakfast",
+    };
+
+    const response = await bookingService.addBooking<BookingResponse>(booking);
+
+    response.status.should.equal(201);
+  });
+
+  it("@Regression - No Firstname - 400", async () => {
+    const response = await bookingService.addBooking<BookingResponse>({
+      lastname: "Snow",
+      totalprice: 1000,
+      depositpaid: true,
+      bookingdates: {
+        checkin: "2024-01-01",
+        checkout: "2024-02-01",
+      },
+      additionalneeds: "Breakfast",
+    });
+    response.status.should.equal(400);
+  });
+});
+```
+
+```tsx
+import { BookingModel } from "../../models/requests/BookingModel.js";
+import { BookingResponse } from "../../models/responses/BookingResponse.js";
+import { BookingService } from "../../models/services/BookingService.js";
+import chai from "chai";
+
+chai.should();
+
+describe("Get Booking", () => {
+  const bookingService = new BookingService();
+
+  it("@Smoke - Get Booking successfully - 200", async () => {
+    const booking = await bookingService.addBooking<BookingResponse>({
+      firstname: "Damian",
+      lastname: "Pereira",
+      totalprice: 1000,
+      depositpaid: true,
+      bookingdates: {
+        checkin: "2024-01-01",
+        checkout: "2024-02-01",
+      },
+      additionalneeds: "Breakfast",
+    });
+
+    const bookingId = booking.data.bookingid;
+
+    const response = await bookingService.getBooking<BookingModel>(bookingId);
+    response.status.should.equal(200, JSON.stringify(response.data));
+    response.data.firstname?.should.equal(booking.data.booking.firstname);
+    response.data.lastname?.should.equal(booking.data.booking.lastname);
+    response.data.totalprice?.should.equal(booking.data.booking.totalprice);
+    response.data.depositpaid?.should.be.true;
+    response.data.bookingdates?.checkin?.should.equal(booking.data.booking.bookingdates?.checkin);
+    response.data.bookingdates?.checkout?.should.equal(booking.data.booking.bookingdates?.checkout);
+    response.data.additionalneeds?.should.equal(booking.data.booking.additionalneeds);
+  });
+
+  it("@Regression - Get Booking successfully - Response time < 1000 ms", async () => {
+    const booking = await bookingService.addBooking<BookingResponse>({
+      firstname: "Damian",
+      lastname: "Pereira",
+      totalprice: 1000,
+      depositpaid: true,
+      bookingdates: {
+        checkin: "2024-01-01",
+        checkout: "2024-02-01",
+      },
+      additionalneeds: "Breakfast",
+    });
+
+    const bookingId = booking.data.bookingid;
+
+    const response = await bookingService.getBooking<BookingModel>(bookingId);
+    response.responseTime.should.be.lessThan(1000);
+  });
+
+  it("@Regression - Get Non-existent Booking - 404", async () => {
+    const bookingId = 999999999;
+    const response = await bookingService.getBooking<BookingResponse>(bookingId);
+    response.status.should.equal(404, JSON.stringify(response.data));
+  });
+});
+```
+
+## OpenAPI Definition
+
+```yaml
+{api_definition}
+```
+
+## Models
+
+```json
+{models}
+```

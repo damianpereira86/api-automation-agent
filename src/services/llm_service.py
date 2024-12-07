@@ -22,6 +22,7 @@ class PromptConfig:
     FIRST_TEST = "./prompts/create-first-test.txt"
     TESTS = "./prompts/create-tests.txt"
     FIX_TYPESCRIPT = "./prompts/fix-typescript.txt"
+    ADDITIONAL_TESTS = "./prompts/create-additional-tests.txt"
 
 
 class LLMService:
@@ -150,6 +151,16 @@ class LLMService:
         """Generate first test for API."""
         return json.loads(
             self.create_ai_chain(PromptConfig.FIRST_TEST).invoke(
+                {"api_definition": api_definition, "models": models}
+            )
+        )
+
+    def generate_additional_tests(
+        self, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        """Generate additional tests for API."""
+        return json.loads(
+            self.create_ai_chain(PromptConfig.ADDITIONAL_TESTS).invoke(
                 {"api_definition": api_definition, "models": models}
             )
         )

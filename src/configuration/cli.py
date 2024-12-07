@@ -32,4 +32,9 @@ class CLIArgumentParser:
             action="store_true",
             help="Use an existing framework instead of creating a new one.",
         )
+        parser.add_argument(
+            "--use-existing-framework",
+            action="store_true",
+            help="Use an existing framework instead of creating a new one.",
+        )
         return parser.parse_args()

@@ -12,6 +12,7 @@ class Envs(Enum):
 
 class GenerationOptions(Enum):
     MODELS = "models"
+    MODELS_AND_FIRST_TEST = "models_and_first_test"
     MODELS_AND_TESTS = "models_and_tests"
 
 

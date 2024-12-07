@@ -131,13 +131,13 @@ class FrameworkGenerator:
         """Generate tests for a specific verb (HTTP method) in the API definition"""
         try:
             self.logger.info(
-                f"\nGenerating tests for path: {api_definition['path']} and verb: {api_definition['verb']}"
+                f"\nGenerating first test for path: {api_definition['path']} and verb: {api_definition['verb']}"
             )
             tests = self.llm_service.generate_first_test(api_definition["yaml"], models)
             if tests:
                 self.tests_count += 1
                 self._run_code_quality_checks(tests)
-                self._generate_additional_tests(api_definition, models)
+                self._generate_additional_tests(tests, models, api_definition)
         except Exception as e:
             self._log_error(
                 f"Error processing verb definition for {api_definition['path']} - {api_definition['verb']}",
@@ -146,16 +146,20 @@ class FrameworkGenerator:
             raise
 
     def _generate_additional_tests(
-        self, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
+        self,
+        tests: List[Dict[str, Any]],
+        models: List[Dict[str, Any]],
+        api_definition: Dict[str, Any],
     ):
         """Generate additional tests based on the initial test and models"""
         try:
             self.logger.info(
                 f"\nGenerating additional tests for path: {api_definition['path']} and verb: {api_definition['verb']}"
             )
-            additional_tests = self.llm_service.generate_additional_tests(api_definition["yaml"], models)
+            additional_tests = self.llm_service.generate_additional_tests(
+                tests, models, api_definition["yaml"]
+            )
             if additional_tests:
-                self.tests_count += len(additional_tests)
                 self._run_code_quality_checks(additional_tests)
         except Exception as e:
             self._log_error(

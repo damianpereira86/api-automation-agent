@@ -92,12 +92,12 @@ python ./main.py api-spec.yaml --destination-folder ./my-api-framework
 ```
 
 ```bash
-# Generate framework for a specific endpoint only
-python ./main.py api-spec.yaml --endpoint /user
+# Generate models and tests for a specific endpoint using an existing framework
+python ./main.py api-spec.yaml --use-existing-framework --destination-folder ./my-api-framework --endpoint /user
 ```
 
 ```bash
-# Generate only data models for all endpoints
+# Generate only data and service models for all endpoints
 python ./main.py api-spec.yaml --generate models
 ```
 

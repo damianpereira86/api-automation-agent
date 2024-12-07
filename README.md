@@ -90,12 +90,13 @@ python ./main.py api-spec.yaml --endpoint /pet --generate models_and_first_test
 
 The generated framework will follow the structure:
 ```
-generated-framework_[timestamp]/
+generated-framework_[timestamp]/    # Or the Destination Folder selected 
 ├── src/
-│   ├── models/        # Generated TypeScript interfaces
-│   ├── services/      # API service classes
-│   └── tests/         # Generated test suites
+│   ├── base/                       # Framework base classes
+│   ├── models/                     # Generated TypeScript interfaces and API service classes
+│   └── tests/                      # Generated test suites
 ├── package.json
+├── (...)
 └── tsconfig.json
 ```
 

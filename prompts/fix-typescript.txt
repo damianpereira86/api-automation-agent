@@ -40,3 +40,17 @@ Below are common errors and the corresponding minimal solutions. Use these as re
       ```typescript
       const response = await userService.createUser<UserModel>(user);
       ```
+
+2. **Error TS2532: Object is possibly 'undefined'.
+    - Cause: This error occurs when TypeScript detects that a variable or property might be undefined and it's being accessed or used without first checking for its presence.
+    - Error Example:
+      ```typescript
+      let user: UserModel | undefined;
+      console.log(user.name); // Error: Object is possibly 'undefined'
+      ```
+    - Solution: Use the optional chaining operator (?.) or non-null assertion operator (!).
+    - Solution Example:
+      ```typescript
+      let user: UserModel | undefined;
+      console.log(user?.name);
+      ```

@@ -112,7 +112,7 @@ class FrameworkGenerator:
 
     def _should_process_endpoint(self, path: str) -> bool:
         """Check if an endpoint should be processed based on configuration"""
-        return self.config.endpoint is None or self.config.endpoint == path
+        return self.config.endpoint is None or path.startswith(self.config.endpoint)
 
     def _generate_models(
         self, api_definition: Dict[str, Any]

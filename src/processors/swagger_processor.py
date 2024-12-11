@@ -43,6 +43,12 @@ class SwaggerProcessor:
             raw_definition = self.file_loader.load(api_file_path)
             split_definitions = self.splitter.split(raw_definition)
             merged_definitions = self.merger.merge(split_definitions)
+
+            for definition in merged_definitions:
+                self.logger.debug(f"\nType: {definition['type']}")
+                self.logger.debug(f"Path: {definition['path']}")
+                self.logger.debug(f"Verb: {definition['verb']}")
+
             self.logger.info(f"Successfully processed API definition.")
             return merged_definitions
         except Exception as e:

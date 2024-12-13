@@ -65,3 +65,20 @@ class FileService:
             except Exception as e:
                 self.logger.error(f"Failed to create file {file_spec.path}: {e}")
         return created_files
+
+    def read_test_results(self, results_file_path: str) -> str:
+        """
+        Read test results from a file.
+
+        Args:
+            results_file_path (str): Path to the test results file
+
+        Returns:
+            str: Content of the test results file
+        """
+        try:
+            with open(results_file_path, "r") as file:
+                return file.read()
+        except Exception as e:
+            self.logger.error(f"Failed to read test results from {results_file_path}: {e}")
+            return ""

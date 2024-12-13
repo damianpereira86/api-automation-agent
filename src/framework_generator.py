@@ -110,6 +110,17 @@ class FrameworkGenerator:
             self._log_error("Error during final checks", e)
             raise
 
+    def analyze_test_results(self):
+        """Analyze test results and summarize them"""
+        try:
+            self.logger.info("\nAnalyzing test results")
+            test_results = self.file_service.read_test_results()
+            analysis = self.llm_service.analyze_test_results(test_results)
+            self.logger.info(f"\nTest Results Analysis: {analysis}")
+        except Exception as e:
+            self._log_error("Error analyzing test results", e)
+            raise
+
     def _should_process_endpoint(self, path: str) -> bool:
         """Check if an endpoint should be processed based on configuration"""
         return self.config.endpoint is None or path.startswith(self.config.endpoint)

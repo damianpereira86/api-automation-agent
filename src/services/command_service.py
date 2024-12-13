@@ -56,7 +56,7 @@ class CommandService:
                 universal_newlines=True,
                 encoding="utf-8",
                 env={
-                    **os.environ,
+                    ...  # <plan-step-label>
                     "PYTHONUNBUFFERED": "1",
                     "FORCE_COLOR": "true",
                     "TERM": "xterm-256color",
@@ -177,6 +177,11 @@ class CommandService:
         file_paths = " ".join(file["path"] for file in files)
         self._log_message(f"\nRunning tests: {file_paths}")
         return self.run_command(f"mocha {file_paths} --timeout 10000")
+
+    def run_test_analysis(self) -> Tuple[bool, str]:
+        """Run test analysis"""
+        self._log_message("\nRunning test analysis...")
+        return self.run_command("npm run analyze-test-results")
 
 
 def build_typescript_compiler_command(files: List[Dict[str, str]]) -> str:

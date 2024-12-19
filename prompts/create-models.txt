@@ -360,3 +360,9 @@ export interface BookingModel {{
 ```yaml
 {api_definition}
 ```
+# Additional relevant context
+
+```additional context
+{additional_context}
+```
+

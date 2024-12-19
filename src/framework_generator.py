@@ -73,15 +73,28 @@ class FrameworkGenerator:
         try:
             self.logger.info("\nProcessing API definitions")
             models = None
+            all_generated_models_info = []
+            all_generated_models = []
+            path_chunks = [path for path in merged_api_definition_list if path["type"] == "path"]
+            verb_chunks = [verb for verb in merged_api_definition_list if verb["type"] == "verb"]
 
-            for api_definition in merged_api_definition_list:
-                if not self._should_process_endpoint(api_definition["path"]):
+            for path in path_chunks:
+                if not self._should_process_endpoint(path["path"]):
                     continue
 
-                if api_definition["type"] == "path":
-                    models = self._process_path_definition(api_definition)
-                elif generate_tests and api_definition["type"] == "verb":
-                    self._process_verb_definition(api_definition, models)
+                models = self._process_path_definition(path)
+                api_definition_summary = self._generate_api_definition_summary(path)
+
+                all_generated_models_info.append({
+                    "path":path["path"],
+                    "summary":api_definition_summary,
+                    "files":[model["path"] for model in models],
+                    "models":models,
+                })
+
+            if generate_tests:
+                for verb in verb_chunks:
+                    self._process_verb_definition(verb, all_generated_models_info)
 
             self.logger.info(
                 f"\nGeneration complete. {self.models_count} models and {self.tests_count} tests were generated."
@@ -114,7 +127,7 @@ class FrameworkGenerator:
         """Process a path definition and generate models"""
         try:
             self.logger.info(f"\nGenerating models for path: {api_definition['path']}")
-            models = self.llm_service.generate_models(api_definition["yaml"])
+            models = self.llm_service.generate_models(api_definition["yaml"],self.config.additional_context)
             if models:
                 self.models_count += len(models)
                 self._run_code_quality_checks(models)
@@ -126,20 +139,48 @@ class FrameworkGenerator:
             raise
 
     def _process_verb_definition(
-        self, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
+        self, verb_chunk: Dict[str, Any], models: List[Dict[str, Any]]
     ):
         """Generate tests for a specific verb (HTTP method) in the API definition"""
         try:
+            models_matched_by_path = None
+            for model in models:
+                if verb_chunk["path"] == model["path"] or str(verb_chunk["path"]).startswith(model["path"]+"/"):
+                    models_matched_by_path = model["models"]
+                    break
+
+            all_available_models = [
+                {
+                    "path": model["path"],
+                    "summary": model["summary"],
+                    "files": model["files"]
+                }
+                for model in models
+            ]
+
+            ask_for_additional_info = True
+            max_retries = 3
+            i = 0
+            while i < max_retries and ask_for_additional_info:
+                read_files = self.llm_service.read_additional_model_info(
+                    self.config.additional_context,
+                    all_available_models,
+                    models_matched_by_path,
+                    verb_chunk
+                )
+                print(read_files)
+                #add read files to next prompt
+
             self.logger.info(
-                f"\nGenerating tests for path: {api_definition['path']} and verb: {api_definition['verb']}"
+                f"\nGenerating tests for path: {verb_chunk['path']} and verb: {verb_chunk['verb']}"
             )
-            tests = self.llm_service.generate_first_test(api_definition["yaml"], models)
+            tests = self.llm_service.generate_first_test(verb_chunk["yaml"], models_matched_by_path)
             if tests:
                 self.tests_count += 1
                 self._run_code_quality_checks(tests)
         except Exception as e:
             self._log_error(
-                f"Error processing verb definition for {api_definition['path']} - {api_definition['verb']}",
+                f"Error processing verb definition for {verb_chunk['path']} - {verb_chunk['verb']}",
                 e,
             )
             raise
@@ -160,4 +201,12 @@ class FrameworkGenerator:
             self.command_service.run_linter()
         except Exception as e:
             self._log_error("Error during code quality checks", e)
+            raise
+    
+    def _generate_api_definition_summary(self, api_definition: Dict[str, Any]):
+        """Generate a summary of a verb/path chunk"""
+        try:
+            return self.llm_service.generate_chunk_summary(api_definition)
+        except Exception as e:
+            self._log_error("Error during summary generation", e)
             raise

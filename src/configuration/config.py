@@ -19,13 +19,14 @@ class GenerationOptions(Enum):
 class Config:
     env: Envs = Envs.DEV
     debug: bool = False
-    model: Model = Model.CLAUDE_SONNET
+    model: Model = Model.CLAUDE_HAIKU
     generate: GenerationOptions = GenerationOptions.MODELS_AND_TESTS
     anthropic_api_key: str = ""
     openai_api_key: str = ""
     api_file_path: str = ""
     destination_folder: str = ""
     endpoint: str = ""
+    additional_context: str = ""
 
     def update(self, updates: dict[str, Any]):
         for key, value in updates.items():

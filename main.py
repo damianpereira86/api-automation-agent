@@ -58,7 +58,6 @@ def main(
 
         api_definitions = framework_generator.process_api_definition()
         framework_generator.setup_framework()
-        print(api_definitions[0])
         framework_generator.create_env_file(api_definitions[0])
         framework_generator.process_definitions(api_definitions, generate_tests)
         framework_generator.run_final_checks(generate_tests)

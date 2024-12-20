@@ -81,7 +81,6 @@ class FrameworkGenerator:
                 if not self._should_process_endpoint(path["path"]):
                     continue
 
-                print(path)
                 models = self._process_path_definition(path)
                 api_definition_summary = self._generate_api_definition_summary(path)
 
@@ -94,7 +93,6 @@ class FrameworkGenerator:
 
             if generate_tests:
                 for verb in verb_chunks:
-                    print(verb)
                     self._process_verb_definition(verb, all_generated_models_info)
 
             self.logger.info(
@@ -145,27 +143,23 @@ class FrameworkGenerator:
         """Generate tests for a specific verb (HTTP method) in the API definition"""
         try:
             models_matched_by_path = None
+            all_available_models_minus_models_matched_by_path = []
             for model in models:
                 if verb_chunk["path"] == model["path"] or str(verb_chunk["path"]).startswith(model["path"]+"/"):
                     models_matched_by_path = model["models"]
-                    break
-
-            all_available_models = [
-                {
-                    "path": model["path"],
-                    "summary": model["summary"],
-                    "files": model["files"]
-                }
-                for model in models
-            ]
+                else:
+                    all_available_models_minus_models_matched_by_path.append({
+                        "path": model["path"],
+                        "summary": model["summary"],
+                        "files": model["files"]
+                    })
             
             read_files = self.llm_service.read_additional_model_info(
                 self.config.additional_context,
-                all_available_models,
+                all_available_models_minus_models_matched_by_path,
                 models_matched_by_path,
                 verb_chunk
             )
-            print(read_files)
 
             self.logger.info(
                 f"\nGenerating tests for path: {verb_chunk['path']} and verb: {verb_chunk['verb']}"

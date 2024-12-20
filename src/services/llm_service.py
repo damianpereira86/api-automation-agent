@@ -119,7 +119,6 @@ class LLMService:
                 llm_with_tools = llm.bind_tools(converted_tools)
 
             def process_response(response):
-                print(response)
                 tool_map = {tool.name.lower(): tool for tool in all_tools}
 
                 if response.tool_calls:
@@ -157,8 +156,6 @@ class LLMService:
         self, additional_context:str, extra_model_info:str, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Generate first test for API."""
-        print("TEST GENERATION")
-        print("READ FILES : ",extra_model_info)
         return json.loads(
             self.create_ai_chain(PromptConfig.FIRST_TEST).invoke({
                 "additional_context": additional_context,

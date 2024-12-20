@@ -24,6 +24,7 @@ class PromptConfig:
     TESTS = "./prompts/create-tests.txt"
     FIX_TYPESCRIPT = "./prompts/fix-typescript.txt"
     SUMMARY = "./prompts/generate-summary.txt"
+    ADD_INFO = "./prompts/add-info.txt"
 
 
 class LLMService:
@@ -45,8 +46,9 @@ class LLMService:
             tools (Optional[List[BaseTool]]): Optional list of tools
         """
         self.config = config
+        self.file_service = file_service
         self.logger = Logger.get_logger(__name__)
-        self.tools = tools or [FileCreationTool(config, file_service), FileReadingTool(config, file_service)]
+        self.tools = tools or [FileCreationTool(config, file_service)]
 
     def _select_language_model(self) -> BaseLanguageModel:
         """
@@ -112,11 +114,12 @@ class LLMService:
             converted_tools = [convert_tool_for_model(tool, llm) for tool in all_tools]
 
             if force_use_tool != "none":
-                llm_with_tools = llm.bind_tools(converted_tools,force_use_tool)
+                llm_with_tools = llm.bind_tools(converted_tools,tool_choice=force_use_tool)
             else:
                 llm_with_tools = llm.bind_tools(converted_tools)
 
             def process_response(response):
+                print(response)
                 tool_map = {tool.name.lower(): tool for tool in all_tools}
 
                 if response.tool_calls:
@@ -151,12 +154,15 @@ class LLMService:
         )
 
     def generate_first_test(
-        self, additional_context:str, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
+        self, additional_context:str, extra_model_info:str, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Generate first test for API."""
+        print("TEST GENERATION")
+        print("READ FILES : ",extra_model_info)
         return json.loads(
             self.create_ai_chain(PromptConfig.FIRST_TEST).invoke({
                 "additional_context": additional_context,
+                "extra_model_info": extra_model_info,
                 "api_definition": api_definition,
                 "models": models
             })
@@ -174,7 +180,7 @@ class LLMService:
         self, additional_context:str, available_models: Dict[str, Any], relevant_models: Dict[str, Any], verb_chunk: Dict[str, Any]
     ):
         """Trigger read file tool to decide what additional model info is needed"""
-        return self.create_ai_chain(PromptConfig.ADD_INFO,force_use_tool="read_files").invoke({
+        return self.create_ai_chain(PromptConfig.ADD_INFO,[FileReadingTool(self.config, self.file_service)],"read_files").invoke({
             "additional_context": additional_context,
             "available_models": available_models,
             "relevant_models": relevant_models,

@@ -74,7 +74,6 @@ class FrameworkGenerator:
             self.logger.info("\nProcessing API definitions")
             models = None
             all_generated_models_info = []
-            all_generated_models = []
             path_chunks = [path for path in merged_api_definition_list if path["type"] == "path"]
             verb_chunks = [verb for verb in merged_api_definition_list if verb["type"] == "verb"]
 
@@ -82,6 +81,7 @@ class FrameworkGenerator:
                 if not self._should_process_endpoint(path["path"]):
                     continue
 
+                print(path)
                 models = self._process_path_definition(path)
                 api_definition_summary = self._generate_api_definition_summary(path)
 
@@ -94,6 +94,7 @@ class FrameworkGenerator:
 
             if generate_tests:
                 for verb in verb_chunks:
+                    print(verb)
                     self._process_verb_definition(verb, all_generated_models_info)
 
             self.logger.info(
@@ -157,24 +158,19 @@ class FrameworkGenerator:
                 }
                 for model in models
             ]
-
-            ask_for_additional_info = True
-            max_retries = 3
-            i = 0
-            while i < max_retries and ask_for_additional_info:
-                read_files = self.llm_service.read_additional_model_info(
-                    self.config.additional_context,
-                    all_available_models,
-                    models_matched_by_path,
-                    verb_chunk
-                )
-                print(read_files)
-                #add read files to next prompt
+            
+            read_files = self.llm_service.read_additional_model_info(
+                self.config.additional_context,
+                all_available_models,
+                models_matched_by_path,
+                verb_chunk
+            )
+            print(read_files)
 
             self.logger.info(
                 f"\nGenerating tests for path: {verb_chunk['path']} and verb: {verb_chunk['verb']}"
             )
-            tests = self.llm_service.generate_first_test(verb_chunk["yaml"], models_matched_by_path)
+            tests = self.llm_service.generate_first_test(self.config.additional_context, read_files, verb_chunk["yaml"], models_matched_by_path)
             if tests:
                 self.tests_count += 1
                 self._run_code_quality_checks(tests)

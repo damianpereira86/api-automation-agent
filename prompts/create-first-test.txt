@@ -378,3 +378,15 @@ describe("Get Booking", () => {{
 ```json
 {models}
 ```
+
+## Additional User Provided context
+
+```text
+{additional_context}
+```
+
+## Extra info about other models useful for this test
+
+```json
+{extra_model_info}
+```

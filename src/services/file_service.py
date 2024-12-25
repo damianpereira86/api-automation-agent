@@ -65,6 +65,7 @@ class FileService:
             except Exception as e:
                 self.logger.error(f"Failed to create file {file_spec.path}: {e}")
         return created_files
+    
     def read_file(self, file_path: str) -> str:
         """
         Read file content specified by path.

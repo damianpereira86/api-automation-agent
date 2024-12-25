@@ -144,21 +144,20 @@ class LLMService:
             )
         )
 
-    def generate_models(self, api_definition: Dict[str, Any], additional_context: str) -> List[Dict[str, Any]]:
+    def generate_models(self, api_definition: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate models from API definition."""
         return json.loads(
             self.create_ai_chain(PromptConfig.MODELS).invoke(
-                {"api_definition": api_definition, "additional_context": additional_context}
+                {"api_definition": api_definition}
             )
         )
 
     def generate_first_test(
-        self, additional_context:str, extra_model_info:str, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
+        self, extra_model_info:str, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Generate first test for API."""
         return json.loads(
             self.create_ai_chain(PromptConfig.FIRST_TEST).invoke({
-                "additional_context": additional_context,
                 "extra_model_info": extra_model_info,
                 "api_definition": api_definition,
                 "models": models
@@ -174,11 +173,10 @@ class LLMService:
         )
 
     def read_additional_model_info(
-        self, additional_context:str, available_models: Dict[str, Any], relevant_models: Dict[str, Any], verb_chunk: Dict[str, Any]
+        self, available_models: Dict[str, Any], relevant_models: Dict[str, Any], verb_chunk: Dict[str, Any]
     ):
         """Trigger read file tool to decide what additional model info is needed"""
         return self.create_ai_chain(PromptConfig.ADD_INFO,[FileReadingTool(self.config, self.file_service)],"read_files").invoke({
-            "additional_context": additional_context,
             "available_models": available_models,
             "relevant_models": relevant_models,
             "verb_chunk": verb_chunk

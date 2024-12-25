@@ -26,26 +26,13 @@ def main(
 
         args = CLIArgumentParser.parse_arguments()
 
-        add_context = ""
-        if args.add_context:
-            try:
-                with open(args.add_context, 'r', encoding='utf-8') as file:
-                    add_context = file.read().strip()
-            except FileNotFoundError:
-                logger.error(f"❌ The file specified for add_context was not found: {args.add_context}")
-                return
-            except Exception as e:
-                logger.error(f"❌ Error reading add_context file: {e}")
-                return
-
         config.update(
             {
                 "api_file_path": args.api_file_path,
                 "destination_folder": args.destination_folder
                 or config.destination_folder,
                 "endpoint": args.endpoint,
-                "generate": GenerationOptions(args.generate),
-                "additional_context": add_context
+                "generate": GenerationOptions(args.generate)
             }
         )
 

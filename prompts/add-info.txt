@@ -43,7 +43,7 @@ The API calls in these preconditions can belong to the Service file matching the
 
 ### TASK DESCRIPTION START ###
 
-Your task is to decide if its necessary to read additional files given a cetain verb_chunk and additional_context
+Your task is to decide if its necessary to read additional files given a cetain verb_chunk
 so that test setup/preconditions/teardown makes sense and is aligned with the additional info
 provided by the user.
 The output must contain the function call for files that need to be read.
@@ -56,13 +56,6 @@ An example of additonal info need would be a test for shipments,
 where it would be necessary to enter products and customers first.
 The operations related to Products and Customers would be extracted from already
 existing files through a file reading tool I'm providing to you.
-
-You must decide if you need additional context based on the user-provided context called "additional_context".
-This context will inform you about nuances and specific inter-Service interactions.
-
-## USER PROVIDED ADDITIONAL CONTEXT START##
-{additional_context}
-## USER PROVIDED ADDITIONAL CONTEXT END##
 
 ## API VERB DEFINITION SNIPPET START ##
 {verb_chunk}

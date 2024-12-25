@@ -126,7 +126,7 @@ class FrameworkGenerator:
         """Process a path definition and generate models"""
         try:
             self.logger.info(f"\nGenerating models for path: {api_definition['path']}")
-            models = self.llm_service.generate_models(api_definition["yaml"],self.config.additional_context)
+            models = self.llm_service.generate_models(api_definition["yaml"])
             if models:
                 self.models_count += len(models)
                 self._run_code_quality_checks(models)
@@ -155,7 +155,6 @@ class FrameworkGenerator:
                     })
             
             read_files = self.llm_service.read_additional_model_info(
-                self.config.additional_context,
                 all_available_models_minus_models_matched_by_path,
                 models_matched_by_path,
                 verb_chunk
@@ -164,7 +163,7 @@ class FrameworkGenerator:
             self.logger.info(
                 f"\nGenerating tests for path: {verb_chunk['path']} and verb: {verb_chunk['verb']}"
             )
-            tests = self.llm_service.generate_first_test(self.config.additional_context, read_files, verb_chunk["yaml"], models_matched_by_path)
+            tests = self.llm_service.generate_first_test(read_files, verb_chunk["yaml"], models_matched_by_path)
             if tests:
                 self.tests_count += 1
                 self._run_code_quality_checks(tests)

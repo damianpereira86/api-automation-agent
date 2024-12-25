@@ -26,7 +26,6 @@ class Config:
     api_file_path: str = ""
     destination_folder: str = ""
     endpoint: str = ""
-    additional_context: str = ""
 
     def update(self, updates: dict[str, Any]):
         for key, value in updates.items():

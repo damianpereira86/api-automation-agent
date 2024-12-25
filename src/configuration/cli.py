@@ -27,9 +27,4 @@ class CLIArgumentParser:
             default="models_and_tests",
             help="Specify what to generate. 'models' for models only, 'models_and_tests' for models and tests.",
         )
-        parser.add_argument(
-            "--add-context",
-            type=str,
-            help="Path to a text file containing additional context"
-        )
         return parser.parse_args()

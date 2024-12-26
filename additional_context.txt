@@ -1,6 +1,0 @@
-In the Subscription Service, before you can subscribe a user, you need to create a plan using POST /plans.
-This endpoint sets up the available subscription options.
-Once a valid plan exists, you can subscribe a user by calling POST /subscriptions,
-which requires a planId referencing one of the plans you've created.
-If you need to cancel a subscription later, you can use PATCH /subscriptions/{id}/cancel,
-but this action is only possible if a subscription was previously created through POST /subscriptions.

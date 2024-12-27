@@ -14,7 +14,7 @@ An open-source AI Agent that automatically generates an automation framework fro
 
 - Python 3.8 or higher
 - Node.js 18 or higher
-- OpenAI API key or Anthropic API key (Anthropic API key required by default)
+- OpenAI, Anthropic or DeepSeek API key (Anthropic API key required by default)
 
 ## Installation
 
@@ -38,11 +38,12 @@ An open-source AI Agent that automatically generates an automation framework fro
     ```
     OPENAI_API_KEY=your_openai_api_key_here
     ANTHROPIC_API_KEY=your_anthropic_api_key_here
+    DEEPSEEK_API_KEY=your_deepseek_api_key_here
     ```
 
 ## Large Language Models
 
-This project supports both Anthropic and OpenAI language models:
+This project supports Anthropic, OpenAI and DeepSeek language models:
 
 ### Default Model
 **Claude 3.5 Sonnet** (claude-3-5-sonnet-20241022) is the default and recommended model
@@ -214,5 +215,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Acknowledgments
 
-- OpenAI and Anthropic for their AI models
+- OpenAI, Anthropic and DeepSeek for their AI models
 - The Endava Testing Discipline for inspiration and support

@@ -62,6 +62,15 @@ class LLMService:
                     api_key=self.config.anthropic_api_key,
                     max_tokens=8192,
                 )
+            elif self.config.model.is_deepseek():
+                self.logger.info("=====> Using DeepSeek model")
+                return ChatOpenAI(
+                    model_name=self.config.model.value,
+                    temperature=1,
+                    api_key=self.config.deepseek_api_key,
+                    openai_api_base="https://api.deepseek.com/",
+                    max_tokens=8000,
+                )
             return ChatOpenAI(
                 model_name=self.config.model.value,
                 temperature=1,

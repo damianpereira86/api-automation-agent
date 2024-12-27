@@ -20,9 +20,10 @@ class BaseConfigAdapter(containers.DeclarativeContainer):
         config.debug = os.getenv("DEBUG", "False").title() == "True"
         config.anthropic_api_key = os.getenv("ANTHROPIC_API_KEY", "")
         config.openai_api_key = os.getenv("OPENAI_API_KEY", "")
+        config.deepseek_api_key = os.getenv("DEEPSEEK_API_KEY", "")
         config.destination_folder = os.getenv(
             "DESTINATION_FOLDER",
-            f"./generated/generated-framework_{datetime.now().strftime('%Y%m%d-%H%M%S')}"
+            f"./generated/generated-framework_{datetime.now().strftime('%Y%m%d-%H%M%S')}",
         )
 
         set_debug(config.debug)

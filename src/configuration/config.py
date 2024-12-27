@@ -24,6 +24,7 @@ class Config:
     generate: GenerationOptions = GenerationOptions.MODELS_AND_TESTS
     anthropic_api_key: str = ""
     openai_api_key: str = ""
+    deepseek_api_key: str = ""
     api_file_path: str = ""
     destination_folder: str = ""
     endpoint: str = ""

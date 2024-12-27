@@ -10,6 +10,7 @@ from langchain_core.tools import BaseTool
 from .file_service import FileService
 from ..configuration.config import Config
 from ..ai_tools.file_creation_tool import FileCreationTool
+from ..ai_tools.file_reading_tool import FileReadingTool
 from ..ai_tools.tool_converters import convert_tool_for_model
 from ..utils.logger import Logger
 
@@ -22,7 +23,10 @@ class PromptConfig:
     FIRST_TEST = "./prompts/create-first-test.txt"
     TESTS = "./prompts/create-tests.txt"
     FIX_TYPESCRIPT = "./prompts/fix-typescript.txt"
+    SUMMARY = "./prompts/generate-summary.txt"
+    ADD_INFO = "./prompts/add-info.txt"
     ADDITIONAL_TESTS = "./prompts/create-additional-tests.txt"
+
 
 
 class LLMService:
@@ -44,6 +48,7 @@ class LLMService:
             tools (Optional[List[BaseTool]]): Optional list of tools
         """
         self.config = config
+        self.file_service = file_service
         self.logger = Logger.get_logger(__name__)
         self.tools = tools or [FileCreationTool(config, file_service)]
 
@@ -89,7 +94,7 @@ class LLMService:
             raise
 
     def create_ai_chain(
-        self, prompt_path: str, additional_tools: Optional[List[BaseTool]] = None
+        self, prompt_path: str, additional_tools: Optional[List[BaseTool]] = None, force_use_tool:str = "none"
     ) -> Any:
         """
         Create a flexible AI chain with tool support.
@@ -110,7 +115,11 @@ class LLMService:
             )
 
             converted_tools = [convert_tool_for_model(tool, llm) for tool in all_tools]
-            llm_with_tools = llm.bind_tools(converted_tools)
+
+            if force_use_tool != "none":
+                llm_with_tools = llm.bind_tools(converted_tools,tool_choice=force_use_tool)
+            else:
+                llm_with_tools = llm.bind_tools(converted_tools)
 
             def process_response(response):
                 tool_map = {tool.name.lower(): tool for tool in all_tools}
@@ -147,14 +156,34 @@ class LLMService:
         )
 
     def generate_first_test(
-        self, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
+        self, extra_model_info:str, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Generate first test from API definition and models."""
         return json.loads(
-            self.create_ai_chain(PromptConfig.FIRST_TEST).invoke(
-                {"api_definition": api_definition, "models": models}
-            )
+            self.create_ai_chain(PromptConfig.FIRST_TEST).invoke({
+                "extra_model_info": extra_model_info,
+                "api_definition": api_definition,
+                "models": models
+            })
         )
+    
+    def generate_chunk_summary(
+        self, api_definition: Dict[str, Any]
+    ):
+        """Generate a summary for a given path/verb chunk"""
+        return self.create_ai_chain(PromptConfig.SUMMARY).invoke(
+            {"chunk": api_definition}
+        )
+
+    def read_additional_model_info(
+        self, available_models: Dict[str, Any], relevant_models: Dict[str, Any], verb_chunk: Dict[str, Any]
+    ):
+        """Trigger read file tool to decide what additional model info is needed"""
+        return self.create_ai_chain(PromptConfig.ADD_INFO,[FileReadingTool(self.config, self.file_service)],"read_files").invoke({
+            "available_models": available_models,
+            "relevant_models": relevant_models,
+            "verb_chunk": verb_chunk
+        })
 
     def generate_additional_tests(
         self,

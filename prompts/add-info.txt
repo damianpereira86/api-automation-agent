@@ -1,0 +1,70 @@
+
+You're part of a chain of agents whose final goal is to generate test files based on api specification snippets
+
+The tests will be part of a Typescript, Mocha, Chai and Axios testing framework that is capable of
+performing assertions on HTTP REST API calls.
+
+Test files use Service files and Models (interfaces) to make API calls. Service files encapsulate API calls in functions, one HTTP verp to one function.
+
+## Service Example Start ##
+
+import {{ ServiceBase }} from './ServiceBase.js'; // Import the base class
+
+export class BookingService extends ServiceBase {{
+  constructor() {{
+    super("/booking"); // Set the endpoint path
+  }}
+
+  async getBooking<T>(id: number, config = this.defaultConfig): Promise<Response<T>> {{
+    return await this.get<T>(`${{this.url}}/${{id}}`, config); // Use the inherited GET method
+  }}
+}}
+
+## Service Example End #
+
+Another part of the agent chain will be in charge of generating tests similar to the following example.
+
+## Test Example Start ##
+
+describe("Get Booking", () => {{
+  const bookingService = new BookingService();
+
+  it("@Smoke - Get Booking successfully - 200", async () => {{
+    const bookingId = 123456;
+    const response = await bookingService.getBooking<BookingModel>(bookingId);
+    response.status.should.equal(200, JSON.stringify(response.data));
+  }});
+  ...
+## Service Example End ##
+
+Naturally, some tests must use preconditions/setup/teardown logic that would require building before/beforeEach/after/afterEach blocks with additional API calls.
+The API calls in these preconditions can belong to the Service file matching the Test but they don't necessarily have to
+(eg: The Shipments .spec test file would use its corresponding Shipments service, but it could be necessary to use the Customers and Transactions service within the Shipments .spec test file)
+
+### TASK DESCRIPTION START ###
+
+Your task is to decide if its necessary to read additional files given a cetain verb_chunk
+so that test setup/preconditions/teardown makes sense and is aligned with the additional info
+provided by the user.
+The output must contain the function call for files that need to be read.
+Make sure the output is only the function call and nothing else.
+If no files are needed then provide an empty array.
+
+### TASK DESCRIPTION END ###
+
+An example of additonal info need would be a test for shipments,
+where it would be necessary to enter products and customers first.
+The operations related to Products and Customers would be extracted from already
+existing files through a file reading tool I'm providing to you.
+
+## API VERB DEFINITION SNIPPET START ##
+{verb_chunk}
+## API VERB DEFINITION SNIPPET END ##
+
+## CORRESPONDING SERVICE/INTERFACE FILES RELATED TO THE VERB START##
+{relevant_models}
+## CORRESPONDING SERVICE/INTERFACE FILES RELATED TO THE VERB END##
+
+## AVAILABLE FILES TO READ START ##
+{available_models}
+## AVAILABLE FILES TO READ END ##

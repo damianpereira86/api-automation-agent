@@ -25,6 +25,8 @@ class PromptConfig:
     FIX_TYPESCRIPT = "./prompts/fix-typescript.txt"
     SUMMARY = "./prompts/generate-summary.txt"
     ADD_INFO = "./prompts/add-info.txt"
+    ADDITIONAL_TESTS = "./prompts/create-additional-tests.txt"
+
 
 
 class LLMService:
@@ -63,6 +65,7 @@ class LLMService:
                     model_name=self.config.model.value,
                     temperature=1,
                     api_key=self.config.anthropic_api_key,
+                    max_tokens=8192,
                 )
             return ChatOpenAI(
                 model_name=self.config.model.value,
@@ -155,7 +158,7 @@ class LLMService:
     def generate_first_test(
         self, extra_model_info:str, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
-        """Generate first test for API."""
+        """Generate first test from API definition and models."""
         return json.loads(
             self.create_ai_chain(PromptConfig.FIRST_TEST).invoke({
                 "extra_model_info": extra_model_info,
@@ -181,6 +184,19 @@ class LLMService:
             "relevant_models": relevant_models,
             "verb_chunk": verb_chunk
         })
+
+    def generate_additional_tests(
+        self,
+        tests: List[Dict[str, Any]],
+        models: List[Dict[str, Any]],
+        api_definition: Dict[str, Any],
+    ) -> List[Dict[str, Any]]:
+        """Generate additional tests from tests, models and an API definition."""
+        return json.loads(
+            self.create_ai_chain(PromptConfig.ADDITIONAL_TESTS).invoke(
+                {"tests": tests, "models": models, "api_definition": api_definition}
+            )
+        )
 
     def fix_typescript(self, files: List[Dict[str, str]], messages: List[str]) -> None:
         """

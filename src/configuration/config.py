@@ -12,6 +12,7 @@ class Envs(Enum):
 
 class GenerationOptions(Enum):
     MODELS = "models"
+    MODELS_AND_FIRST_TEST = "models_and_first_test"
     MODELS_AND_TESTS = "models_and_tests"
 
 
@@ -26,6 +27,7 @@ class Config:
     api_file_path: str = ""
     destination_folder: str = ""
     endpoint: str = ""
+    use_existing_framework: bool = False
 
     def update(self, updates: dict[str, Any]):
         for key, value in updates.items():

@@ -54,7 +54,15 @@ class CommandService:
                 stderr=subprocess.STDOUT,
                 bufsize=0,
                 universal_newlines=True,
-                env={**os.environ, "PYTHONUNBUFFERED": "1"},
+                encoding="utf-8",
+                env={
+                    **os.environ,
+                    "PYTHONUNBUFFERED": "1",
+                    "FORCE_COLOR": "true",
+                    "TERM": "xterm-256color",
+                    "LANG": "en_US.UTF-8",
+                    "LC_ALL": "en_US.UTF-8",
+                },
             )
 
             output_lines = []

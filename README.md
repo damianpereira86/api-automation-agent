@@ -40,9 +40,31 @@ An open-source AI Agent that automatically generates an automation framework fro
     ANTHROPIC_API_KEY=your_anthropic_api_key_here
     ```
 
-## LLMs
+## Large Language Models
 
-The default model is Claude 3.5 Sonnet (claude-3-5-sonnet-20241022), which provides a good balance between performance and cost. Currently, both Anthropic (Claude) and OpenAI (GPT) models are supported. You can modify the model in the `config.py` file if needed. 
+This project supports both Anthropic and OpenAI language models:
+
+### Default Model
+**Claude 3.5 Sonnet** (claude-3-5-sonnet-20241022) is the default and recommended model
+- Provides superior code generation and understanding
+- Offers the best balance of performance and cost
+
+### Supported Models
+**Anthropic**
+  - Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)
+
+**OpenAI**
+  - GPT-4o (gpt-4o)
+  - GPT-4o Mini (gpt-4o-mini)
+  - GPT-4 Turbo (gpt-4-turbo)
+  - GPT-3.5 Turbo (gpt-3.5-turbo)
+  - O1 Preview (o1-preview)
+  - O1 Mini (o1-mini)
+
+You can configure your preferred model in the `.env` file:
+```env
+MODEL=claude-3-5-sonnet-20241022  # Default value
+```
 
 ## Usage
 
@@ -55,18 +77,51 @@ python ./main.py path/to/your/openapi.yaml
 ### Options
 
 - `--destination-folder`: Specify output directory (default: ./generated-framework_[timestamp])
+- `--use-existing-framework`: Use an existing framework instead of creating a new one
 - `--endpoint`: Generate framework for a specific endpoint only
 - `--generate`: Specify what to generate (default: models_and_tests)
   - `models`: Generate only the data models
-  - `models_and_tests`: Generate both data models and test suites
+  - `models_and_first_test`: Generate data models and the first test for each endpoint
+  - `models_and_tests`: Generate data models and complete test suites
 
-### Example
+### Examples
 
 ```bash
-python ./main.py api-spec.yaml --destination-folder ./my-api-client
+# Generate complete framework with all endpoints
+python ./main.py api-spec.yaml --destination-folder ./my-api-framework
 ```
 
-The generated framework will be created in your specified destination folder.
+```bash
+# Generate models and tests for a specific endpoint using an existing framework
+python ./main.py api-spec.yaml --use-existing-framework --destination-folder ./my-api-framework --endpoint /user
+```
+
+```bash
+# Generate only data and service models for all endpoints
+python ./main.py api-spec.yaml --generate models
+```
+
+```bash
+# Generate models and first test for each endpoint in a custom folder
+python ./main.py api-spec.yaml --generate models_and_first_test --destination-folder ./quick-tests
+```
+
+```bash
+# Combine options to generate specific endpoint with first test only
+python ./main.py api-spec.yaml --endpoint /pet --generate models_and_first_test
+```
+
+The generated framework will follow the structure:
+```
+generated-framework_[timestamp]/    # Or the Destination Folder selected 
+├── src/
+│   ├── base/                       # Framework base classes
+│   ├── models/                     # Generated TypeScript interfaces and API service classes
+│   └── tests/                      # Generated test suites
+├── package.json
+├── (...)
+└── tsconfig.json
+```
 
 ## Testing the Agent
 

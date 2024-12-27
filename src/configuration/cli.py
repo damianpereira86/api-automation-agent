@@ -23,8 +23,13 @@ class CLIArgumentParser:
         parser.add_argument(
             "--generate",
             type=str,
-            choices=["models", "models_and_tests"],
+            choices=["models", "models_and_first_test", "models_and_tests"],
             default="models_and_tests",
-            help="Specify what to generate. 'models' for models only, 'models_and_tests' for models and tests.",
+            help="Specify what to generate. 'models' for models only, 'models_and_first_test' for models and first test, 'models_and_tests' for models and tests.",
+        )
+        parser.add_argument(
+            "--use-existing-framework",
+            action="store_true",
+            help="Use an existing framework instead of creating a new one.",
         )
         return parser.parse_args()

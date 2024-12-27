@@ -63,7 +63,6 @@ class LLMService:
                     max_tokens=8192,
                 )
             elif self.config.model.is_deepseek():
-                self.logger.info("=====> Using DeepSeek model")
                 return ChatOpenAI(
                     model_name=self.config.model.value,
                     temperature=1,

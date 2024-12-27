@@ -1,5 +1,6 @@
 from enum import Enum
 
+
 class Model(Enum):
     GPT_4O = "gpt-4o"
     GPT_4O_MINI = "gpt-4o-mini"
@@ -11,4 +12,4 @@ class Model(Enum):
     CLAUDE_HAIKU = "claude-3-5-haiku-20241022"
 
     def is_anthropic(self):
-        return self in [Model.CLAUDE_HAIKU]
+        return self in [Model.CLAUDE_HAIKU, Model.CLAUDE_SONNET]

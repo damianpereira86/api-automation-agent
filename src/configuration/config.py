@@ -20,7 +20,7 @@ class GenerationOptions(Enum):
 class Config:
     env: Envs = Envs.DEV
     debug: bool = False
-    model: Model = Model.CLAUDE_HAIKU
+    model: Model = Model.CLAUDE_SONNET
     generate: GenerationOptions = GenerationOptions.MODELS_AND_TESTS
     anthropic_api_key: str = ""
     openai_api_key: str = ""

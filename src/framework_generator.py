@@ -74,8 +74,12 @@ class FrameworkGenerator:
             self.logger.info("\nProcessing API definitions")
             models = None
             all_generated_models_info = []
-            path_chunks = [path for path in merged_api_definition_list if path["type"] == "path"]
-            verb_chunks = [verb for verb in merged_api_definition_list if verb["type"] == "verb"]
+            path_chunks = [
+                path for path in merged_api_definition_list if path["type"] == "path"
+            ]
+            verb_chunks = [
+                verb for verb in merged_api_definition_list if verb["type"] == "verb"
+            ]
 
             for path in path_chunks:
                 if not self._should_process_endpoint(path["path"]):
@@ -84,19 +88,23 @@ class FrameworkGenerator:
                 models = self._generate_models(path)
                 api_definition_summary = self._generate_api_definition_summary(path)
 
-                all_generated_models_info.append({
-                    "path":path["path"],
-                    "summary":api_definition_summary,
-                    "files":[model["path"] for model in models],
-                    "models":models,
-                })
+                all_generated_models_info.append(
+                    {
+                        "path": path["path"],
+                        "summary": api_definition_summary,
+                        "files": [model["path"] for model in models],
+                        "models": models,
+                    }
+                )
 
             if generate_tests in (
-                    GenerationOptions.MODELS_AND_FIRST_TEST,
-                    GenerationOptions.MODELS_AND_TESTS,
+                GenerationOptions.MODELS_AND_FIRST_TEST,
+                GenerationOptions.MODELS_AND_TESTS,
             ):
                 for verb in verb_chunks:
-                    self._generate_tests(verb, all_generated_models_info, generate_tests)
+                    self._generate_tests(
+                        verb, all_generated_models_info, generate_tests
+                    )
 
             self.logger.info(
                 f"\nGeneration complete. {self.models_count} models and {self.tests_count} tests were generated."
@@ -154,30 +162,38 @@ class FrameworkGenerator:
             models_matched_by_path = None
             all_available_models_minus_models_matched_by_path = []
             for model in models:
-                if verb_chunk["path"] == model["path"] or str(verb_chunk["path"]).startswith(model["path"]+"/"):
+                if verb_chunk["path"] == model["path"] or str(
+                    verb_chunk["path"]
+                ).startswith(model["path"] + "/"):
                     models_matched_by_path = model["models"]
                 else:
-                    all_available_models_minus_models_matched_by_path.append({
-                        "path": model["path"],
-                        "summary": model["summary"],
-                        "files": model["files"]
-                    })
-            
+                    all_available_models_minus_models_matched_by_path.append(
+                        {
+                            "path": model["path"],
+                            "summary": model["summary"],
+                            "files": model["files"],
+                        }
+                    )
+
             read_files = self.llm_service.read_additional_model_info(
                 all_available_models_minus_models_matched_by_path,
                 models_matched_by_path,
-                verb_chunk
+                verb_chunk,
             )
 
             self.logger.info(
                 f"\nGenerating first test for path: {verb_chunk['path']} and verb: {verb_chunk['verb']}"
             )
-            tests = self.llm_service.generate_first_test(read_files, verb_chunk["yaml"], models_matched_by_path)
+            tests = self.llm_service.generate_first_test(
+                verb_chunk["yaml"], models_matched_by_path, read_files
+            )
             if tests:
                 self.tests_count += 1
                 self._run_code_quality_checks(tests)
                 if generate_tests == GenerationOptions.MODELS_AND_TESTS:
-                    self._generate_additional_tests(tests, models, api_definition)
+                    self._generate_additional_tests(
+                        tests, models, verb_chunk["yaml"], read_files
+                    )
         except Exception as e:
             self._log_error(
                 f"Error processing verb definition for {verb_chunk['path']} - {verb_chunk['verb']}",
@@ -190,6 +206,7 @@ class FrameworkGenerator:
         tests: List[Dict[str, Any]],
         models: List[Dict[str, Any]],
         api_definition: Dict[str, Any],
+        extra_model_info: str,
     ):
         """Generate additional tests based on the initial test and models"""
         try:
@@ -197,7 +214,7 @@ class FrameworkGenerator:
                 f"\nGenerating additional tests for path: {api_definition['path']} and verb: {api_definition['verb']}"
             )
             additional_tests = self.llm_service.generate_additional_tests(
-                tests, models, api_definition["yaml"]
+                tests, models, api_definition, extra_model_info
             )
             if additional_tests:
                 self._run_code_quality_checks(additional_tests)
@@ -225,7 +242,7 @@ class FrameworkGenerator:
         except Exception as e:
             self._log_error("Error during code quality checks", e)
             raise
-    
+
     def _generate_api_definition_summary(self, api_definition: Dict[str, Any]):
         """Generate a summary of a verb/path chunk"""
         try:

@@ -28,7 +28,6 @@ class PromptConfig:
     ADDITIONAL_TESTS = "./prompts/create-additional-tests.txt"
 
 
-
 class LLMService:
     """
     Service for managing language model interactions.
@@ -94,7 +93,10 @@ class LLMService:
             raise
 
     def create_ai_chain(
-        self, prompt_path: str, additional_tools: Optional[List[BaseTool]] = None, force_use_tool:str = "none"
+        self,
+        prompt_path: str,
+        additional_tools: Optional[List[BaseTool]] = None,
+        force_use_tool: str = "none",
     ) -> Any:
         """
         Create a flexible AI chain with tool support.
@@ -117,7 +119,9 @@ class LLMService:
             converted_tools = [convert_tool_for_model(tool, llm) for tool in all_tools]
 
             if force_use_tool != "none":
-                llm_with_tools = llm.bind_tools(converted_tools,tool_choice=force_use_tool)
+                llm_with_tools = llm.bind_tools(
+                    converted_tools, tool_choice=force_use_tool
+                )
             else:
                 llm_with_tools = llm.bind_tools(converted_tools)
 
@@ -156,45 +160,63 @@ class LLMService:
         )
 
     def generate_first_test(
-        self, extra_model_info:str, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
+        self,
+        api_definition: Dict[str, Any],
+        models: List[Dict[str, Any]],
+        extra_model_info: str,
     ) -> List[Dict[str, Any]]:
         """Generate first test from API definition and models."""
         return json.loads(
-            self.create_ai_chain(PromptConfig.FIRST_TEST).invoke({
-                "extra_model_info": extra_model_info,
-                "api_definition": api_definition,
-                "models": models
-            })
+            self.create_ai_chain(PromptConfig.FIRST_TEST).invoke(
+                {
+                    "extra_model_info": extra_model_info,
+                    "api_definition": api_definition,
+                    "models": models,
+                }
+            )
         )
-    
-    def generate_chunk_summary(
-        self, api_definition: Dict[str, Any]
-    ):
+
+    def generate_chunk_summary(self, api_definition: Dict[str, Any]):
         """Generate a summary for a given path/verb chunk"""
         return self.create_ai_chain(PromptConfig.SUMMARY).invoke(
             {"chunk": api_definition}
         )
 
     def read_additional_model_info(
-        self, available_models: Dict[str, Any], relevant_models: Dict[str, Any], verb_chunk: Dict[str, Any]
+        self,
+        available_models: Dict[str, Any],
+        relevant_models: Dict[str, Any],
+        verb_chunk: Dict[str, Any],
     ):
         """Trigger read file tool to decide what additional model info is needed"""
-        return self.create_ai_chain(PromptConfig.ADD_INFO,[FileReadingTool(self.config, self.file_service)],"read_files").invoke({
-            "available_models": available_models,
-            "relevant_models": relevant_models,
-            "verb_chunk": verb_chunk
-        })
+        return self.create_ai_chain(
+            PromptConfig.ADD_INFO,
+            [FileReadingTool(self.config, self.file_service)],
+            "read_files",
+        ).invoke(
+            {
+                "available_models": available_models,
+                "relevant_models": relevant_models,
+                "verb_chunk": verb_chunk,
+            }
+        )
 
     def generate_additional_tests(
         self,
         tests: List[Dict[str, Any]],
         models: List[Dict[str, Any]],
         api_definition: Dict[str, Any],
+        extra_model_info: str,
     ) -> List[Dict[str, Any]]:
         """Generate additional tests from tests, models and an API definition."""
         return json.loads(
             self.create_ai_chain(PromptConfig.ADDITIONAL_TESTS).invoke(
-                {"tests": tests, "models": models, "api_definition": api_definition}
+                {
+                    "tests": tests,
+                    "models": models,
+                    "api_definition": api_definition,
+                    "extra_model_info": extra_model_info,
+                }
             )
         )
 

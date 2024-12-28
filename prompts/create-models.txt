@@ -9,9 +9,9 @@ The tests must be created for a custom framework I will detail below.
 Your task is to create the Service Model file for the path documented on the OpenAPI Definition section.
 - Include in the Service Model every verb detailed in the OpenAPI Definition.
 - Parameters to the verbs methods must be of type unknown, to allow to test negative scenarios.
-- Service Models must be placed inside /src/models/services folder.
+- Service Models must be placed inside /src/models/services folder in the current working directory.
 - If additional models are required, such as Request or Response models, create separate files for them and import them into the Service Model class. Don't declare the models interfaces inside the service model file.
-- Models must be placed inside /src/models/requests or /src/models/responses folders.
+- Models must be placed inside /src/models/requests or /src/models/responses folders in the current working directory.
 - For request models, declare all their properties as optional.
 - Include ".js" in the import statements for modules.
 - You will be penalized for every TS or eslint error.

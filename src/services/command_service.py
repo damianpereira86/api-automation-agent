@@ -131,10 +131,15 @@ class CommandService:
 
             retry_count += 1
 
+        success, message = command_func(files)
+
+        if success:
+            return success, message
+
         self._log_message(
             f"Command failed after {max_retries} attempts.", is_error=True
         )
-        return command_func(files)
+        return False, message
 
     def install_dependencies(self) -> Tuple[bool, str]:
         """Install npm dependencies"""

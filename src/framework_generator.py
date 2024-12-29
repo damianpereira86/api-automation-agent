@@ -159,15 +159,15 @@ class FrameworkGenerator:
     ):
         """Generate tests for a specific verb (HTTP method) in the API definition"""
         try:
-            models_matched_by_path = None
-            all_available_models_minus_models_matched_by_path = []
+            relevant_models = None
+            other_models = []
             for model in models:
                 if verb_chunk["path"] == model["path"] or str(
                     verb_chunk["path"]
                 ).startswith(model["path"] + "/"):
-                    models_matched_by_path = model["models"]
+                    relevant_models = model["models"]
                 else:
-                    all_available_models_minus_models_matched_by_path.append(
+                    other_models.append(
                         {
                             "path": model["path"],
                             "summary": model["summary"],
@@ -176,8 +176,8 @@ class FrameworkGenerator:
                     )
 
             read_files = self.llm_service.read_additional_model_info(
-                all_available_models_minus_models_matched_by_path,
-                models_matched_by_path,
+                relevant_models,
+                other_models,
                 verb_chunk,
             )
 
@@ -185,7 +185,7 @@ class FrameworkGenerator:
                 f"\nGenerating first test for path: {verb_chunk['path']} and verb: {verb_chunk['verb']}"
             )
             tests = self.llm_service.generate_first_test(
-                verb_chunk["yaml"], models_matched_by_path, read_files
+                verb_chunk["yaml"], relevant_models, read_files
             )
             if tests:
                 self.tests_count += 1

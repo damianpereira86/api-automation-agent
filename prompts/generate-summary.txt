@@ -3,19 +3,18 @@ You will be given either a path or a verb in the format of a dictionary.
 
 If the chunk is a path, summarize what the path is used for in one sentence in the following manner:
 
-#START EXAMPLE#
+## START EXAMPLE
 Fetch store details, update store settings, or delete the store.
-#END EXAMPLE#
+## END EXAMPLE#
 
-If the chunk is a verb, then summarize what can the verb do in terms of business logic
-and actual techical function in the following manner:
+If the chunk is a verb, then summarize what can the verb do in terms of business logic and actual techical function in the following manner:
 
-#START EXAMPLE#
+## START EXAMPLE
 Create a new booking and return booking details.
-#END EXAMPLE#
+## END EXAMPLE
 
 Format your output in a similar fashion to the examples shown above.
-Dont include anything other than text in the format specified in the examples above.
+Don't include anything other than text in the format specified in the examples above.
 
 ```chunk
 {chunk}

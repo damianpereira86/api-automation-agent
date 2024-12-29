@@ -96,7 +96,7 @@ class LLMService:
         self,
         prompt_path: str,
         additional_tools: Optional[List[BaseTool]] = None,
-        force_use_tool: str = "none",
+        tool_to_use: Optional[str] = None,
     ) -> Any:
         """
         Create a flexible AI chain with tool support.
@@ -118,9 +118,9 @@ class LLMService:
 
             converted_tools = [convert_tool_for_model(tool, llm) for tool in all_tools]
 
-            if force_use_tool != "none":
+            if tool_to_use is not None:
                 llm_with_tools = llm.bind_tools(
-                    converted_tools, tool_choice=force_use_tool
+                    converted_tools, tool_choice=tool_to_use
                 )
             else:
                 llm_with_tools = llm.bind_tools(converted_tools)
@@ -184,8 +184,8 @@ class LLMService:
 
     def read_additional_model_info(
         self,
-        available_models: Dict[str, Any],
         relevant_models: Dict[str, Any],
+        available_models: Dict[str, Any],
         verb_chunk: Dict[str, Any],
     ):
         """Trigger read file tool to decide what additional model info is needed"""

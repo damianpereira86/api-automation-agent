@@ -23,8 +23,8 @@ class PromptConfig:
     FIRST_TEST = "./prompts/create-first-test.txt"
     TESTS = "./prompts/create-tests.txt"
     FIX_TYPESCRIPT = "./prompts/fix-typescript.txt"
-    SUMMARY = "./prompts/generate-summary.txt"
-    ADD_INFO = "./prompts/add-info.txt"
+    SUMMARY = "./prompts/generate-model-summary.txt"
+    ADD_INFO = "./prompts/add-models-context.txt"
     ADDITIONAL_TESTS = "./prompts/create-additional-tests.txt"
 
 
@@ -163,32 +163,31 @@ class LLMService:
         self,
         api_definition: Dict[str, Any],
         models: List[Dict[str, Any]],
-        extra_model_info: str,
+        additional_models: List[Dict[str, Any]],
     ) -> List[Dict[str, Any]]:
         """Generate first test from API definition and models."""
         return json.loads(
             self.create_ai_chain(PromptConfig.FIRST_TEST).invoke(
                 {
-                    "extra_model_info": extra_model_info,
                     "api_definition": api_definition,
                     "models": models,
+                    "additional_models": additional_models,
                 }
             )
         )
 
-    def generate_chunk_summary(self, api_definition: Dict[str, Any]):
-        """Generate a summary for a given path/verb chunk"""
-        return self.create_ai_chain(PromptConfig.SUMMARY).invoke(
-            {"chunk": api_definition}
-        )
+    def generate_service_summary(self, models: List[Dict[str, Any]]):
+        """Generate a summary for a given service model"""
+        # TODO: This should use a smaller model (e.g. Haiku)
+        return self.create_ai_chain(PromptConfig.SUMMARY).invoke({"models": models})
 
-    def read_additional_model_info(
+    def get_additional_models(
         self,
         relevant_models: Dict[str, Any],
         available_models: Dict[str, Any],
-        verb_chunk: Dict[str, Any],
     ):
         """Trigger read file tool to decide what additional model info is needed"""
+        self.logger.info(f"\nGetting additional models...")
         return self.create_ai_chain(
             PromptConfig.ADD_INFO,
             [FileReadingTool(self.config, self.file_service)],
@@ -197,7 +196,6 @@ class LLMService:
             {
                 "available_models": available_models,
                 "relevant_models": relevant_models,
-                "verb_chunk": verb_chunk,
             }
         )
 
@@ -206,7 +204,7 @@ class LLMService:
         tests: List[Dict[str, Any]],
         models: List[Dict[str, Any]],
         api_definition: Dict[str, Any],
-        extra_model_info: str,
+        additional_models: List[Dict[str, Any]],
     ) -> List[Dict[str, Any]]:
         """Generate additional tests from tests, models and an API definition."""
         return json.loads(
@@ -215,7 +213,7 @@ class LLMService:
                     "tests": tests,
                     "models": models,
                     "api_definition": api_definition,
-                    "extra_model_info": extra_model_info,
+                    "additional_models": additional_models,
                 }
             )
         )

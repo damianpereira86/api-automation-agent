@@ -86,12 +86,12 @@ class FrameworkGenerator:
                     continue
 
                 models = self._generate_models(path)
-                api_definition_summary = self._generate_api_definition_summary(path)
+                service_summary = self._generate_service_summary(models)
 
                 all_generated_models_info.append(
                     {
                         "path": path["path"],
-                        "summary": api_definition_summary,
+                        "summary": service_summary,
                         "files": [model["path"] for model in models],
                         "models": models,
                     }
@@ -154,14 +154,14 @@ class FrameworkGenerator:
     def _generate_tests(
         self,
         verb_chunk: Dict[str, Any],
-        models: List[Dict[str, Any]],
+        all_models: List[Dict[str, Any]],
         generate_tests: GenerationOptions,
     ):
         """Generate tests for a specific verb (HTTP method) in the API definition"""
         try:
             relevant_models = None
             other_models = []
-            for model in models:
+            for model in all_models:
                 if verb_chunk["path"] == model["path"] or str(
                     verb_chunk["path"]
                 ).startswith(model["path"] + "/"):
@@ -175,24 +175,28 @@ class FrameworkGenerator:
                         }
                     )
 
-            read_files = self.llm_service.read_additional_model_info(
-                relevant_models,
-                other_models,
-                verb_chunk,
-            )
-
             self.logger.info(
                 f"\nGenerating first test for path: {verb_chunk['path']} and verb: {verb_chunk['verb']}"
             )
+
+            additional_models = self.llm_service.get_additional_models(
+                relevant_models,
+                other_models,
+            )
+
+            self.logger.info(
+                f"\nAdding additional models: {[model['path'] for model in additional_models]}"
+            )
+
             tests = self.llm_service.generate_first_test(
-                verb_chunk["yaml"], relevant_models, read_files
+                verb_chunk["yaml"], relevant_models, additional_models
             )
             if tests:
                 self.tests_count += 1
                 self._run_code_quality_checks(tests)
                 if generate_tests == GenerationOptions.MODELS_AND_TESTS:
                     self._generate_additional_tests(
-                        tests, models, verb_chunk["yaml"], read_files
+                        tests, relevant_models, verb_chunk, additional_models
                     )
         except Exception as e:
             self._log_error(
@@ -206,7 +210,7 @@ class FrameworkGenerator:
         tests: List[Dict[str, Any]],
         models: List[Dict[str, Any]],
         api_definition: Dict[str, Any],
-        extra_model_info: str,
+        additional_models: List[Dict[str, Any]],
     ):
         """Generate additional tests based on the initial test and models"""
         try:
@@ -214,7 +218,7 @@ class FrameworkGenerator:
                 f"\nGenerating additional tests for path: {api_definition['path']} and verb: {api_definition['verb']}"
             )
             additional_tests = self.llm_service.generate_additional_tests(
-                tests, models, api_definition, extra_model_info
+                tests, models, api_definition["yaml"], additional_models
             )
             if additional_tests:
                 self._run_code_quality_checks(additional_tests)
@@ -243,10 +247,13 @@ class FrameworkGenerator:
             self._log_error("Error during code quality checks", e)
             raise
 
-    def _generate_api_definition_summary(self, api_definition: Dict[str, Any]):
-        """Generate a summary of a verb/path chunk"""
+    def _generate_service_summary(self, models: List[Dict[str, Any]]):
+        """Generate a summary of a service"""
+        self.logger.info(f"\nGenerating service summary for...")
         try:
-            return self.llm_service.generate_chunk_summary(api_definition)
+            summary = self.llm_service.generate_service_summary(models)
+            self.logger.info(f"Service summary: {summary}")
+            return summary
         except Exception as e:
             self._log_error("Error during summary generation", e)
             raise

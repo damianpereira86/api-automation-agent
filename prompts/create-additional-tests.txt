@@ -168,8 +168,8 @@ describe("Get Booking", () => {{
 {api_definition}
 ```
 
-## Extra info about other models useful for this test
+## Additional Models
 
 ```json
-{extra_model_info}
+{additional_models}
 ```

@@ -72,22 +72,6 @@ class LLMService:
             self.logger.error(f"Model initialization error: {e}")
             raise
 
-    # def _load_prompt(self, prompt_path: str) -> str:
-    #     """
-    #     Load a prompt from a file.
-
-    #     Args:
-    #         prompt_path (str): Path to the prompt file
-
-    #     Returns:
-    #         str: Loaded prompt content
-    #     """
-    #     try:
-    #         with open(prompt_path, "r", encoding="utf-8") as file:
-    #             return file.read().strip()
-    #     except IOError as e:
-    #         self.logger.error(f"Failed to load prompt from {prompt_path}: {e}")
-    #         raise
     def _load_prompt(self, prompt_paths: list[str]) -> str:
         """
         Load prompts from multiple files and concatenate their content.

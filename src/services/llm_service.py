@@ -23,6 +23,7 @@ class PromptConfig:
     TESTS = "./prompts/create-tests.txt"
     FIX_TYPESCRIPT = "./prompts/fix-typescript.txt"
     ADDITIONAL_TESTS = "./prompts/create-additional-tests.txt"
+    FRAMEWORK_SPECIFIC = "./api-framework-template/framework-prompt-documentation.txt"
 
 
 class LLMService:
@@ -71,31 +72,50 @@ class LLMService:
             self.logger.error(f"Model initialization error: {e}")
             raise
 
-    def _load_prompt(self, prompt_path: str) -> str:
+    # def _load_prompt(self, prompt_path: str) -> str:
+    #     """
+    #     Load a prompt from a file.
+
+    #     Args:
+    #         prompt_path (str): Path to the prompt file
+
+    #     Returns:
+    #         str: Loaded prompt content
+    #     """
+    #     try:
+    #         with open(prompt_path, "r", encoding="utf-8") as file:
+    #             return file.read().strip()
+    #     except IOError as e:
+    #         self.logger.error(f"Failed to load prompt from {prompt_path}: {e}")
+    #         raise
+    def _load_prompt(self, prompt_paths: list[str]) -> str:
         """
-        Load a prompt from a file.
+        Load prompts from multiple files and concatenate their content.
 
         Args:
-            prompt_path (str): Path to the prompt file
+            prompt_paths (list[str]): List of paths to the prompt files
 
         Returns:
-            str: Loaded prompt content
+            str: Concatenated content of all prompt files
         """
         try:
-            with open(prompt_path, "r", encoding="utf-8") as file:
-                return file.read().strip()
+            combined_content = ""
+            for prompt_path in prompt_paths:
+                with open(prompt_path, "r", encoding="utf-8") as file:
+                    combined_content += file.read().strip() + "\n"
+            return combined_content.strip()
         except IOError as e:
-            self.logger.error(f"Failed to load prompt from {prompt_path}: {e}")
+            self.logger.error(f"Failed to load prompts from {prompt_paths}: {e}")
             raise
 
     def create_ai_chain(
-        self, prompt_path: str, additional_tools: Optional[List[BaseTool]] = None
+        self, prompt_paths: list[str], additional_tools: Optional[List[BaseTool]] = None
     ) -> Any:
         """
         Create a flexible AI chain with tool support.
 
         Args:
-            prompt_path (str): Path to the prompt template
+            prompt_paths (list[str]): List of paths to the prompt files
             additional_tools (Optional[List[BaseTool]]): Additional tools to bind
 
         Returns:
@@ -106,7 +126,7 @@ class LLMService:
 
             llm = self._select_language_model()
             prompt_template = ChatPromptTemplate.from_template(
-                self._load_prompt(prompt_path)
+                self._load_prompt(prompt_paths)
             )
 
             converted_tools = [convert_tool_for_model(tool, llm) for tool in all_tools]
@@ -130,29 +150,48 @@ class LLMService:
             self.logger.error(f"Chain creation error: {e}")
             raise
 
-    def generate_dot_env(self, api_definition: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def generate_dot_env(
+        self,
+        api_definition: Dict[str, Any],
+        tests: Optional[List[Dict[str, Any]]] = None,
+        models: Optional[List[Dict[str, Any]]] = None,
+    ) -> List[Dict[str, Any]]:
         """Generate .env file configuration."""
         return json.loads(
-            self.create_ai_chain(PromptConfig.DOT_ENV).invoke(
-                {"api_definition": api_definition}
+            self.create_ai_chain(
+                [PromptConfig.DOT_ENV, PromptConfig.FRAMEWORK_SPECIFIC]
+            ).invoke(
+                {"tests": tests, "models": models, "api_definition": api_definition}
             )
         )
 
-    def generate_models(self, api_definition: Dict[str, Any]) -> List[Dict[str, Any]]:
+    def generate_models(
+        self,
+        api_definition: Dict[str, Any],
+        tests: Optional[List[Dict[str, Any]]] = None,
+        models: Optional[List[Dict[str, Any]]] = None,
+    ) -> List[Dict[str, Any]]:
         """Generate models from API definition."""
         return json.loads(
-            self.create_ai_chain(PromptConfig.MODELS).invoke(
-                {"api_definition": api_definition}
+            self.create_ai_chain(
+                [PromptConfig.MODELS, PromptConfig.FRAMEWORK_SPECIFIC]
+            ).invoke(
+                {"tests": tests, "models": models, "api_definition": api_definition}
             )
         )
 
     def generate_first_test(
-        self, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
+        self,
+        models: List[Dict[str, Any]],
+        api_definition: Dict[str, Any],
+        tests: Optional[List[Dict[str, Any]]] = None,
     ) -> List[Dict[str, Any]]:
         """Generate first test from API definition and models."""
         return json.loads(
-            self.create_ai_chain(PromptConfig.FIRST_TEST).invoke(
-                {"api_definition": api_definition, "models": models}
+            self.create_ai_chain(
+                [PromptConfig.FIRST_TEST, PromptConfig.FRAMEWORK_SPECIFIC]
+            ).invoke(
+                {"tests": tests, "models": models, "api_definition": api_definition}
             )
         )
 
@@ -164,7 +203,9 @@ class LLMService:
     ) -> List[Dict[str, Any]]:
         """Generate additional tests from tests, models and an API definition."""
         return json.loads(
-            self.create_ai_chain(PromptConfig.ADDITIONAL_TESTS).invoke(
+            self.create_ai_chain(
+                [PromptConfig.ADDITIONAL_TESTS, PromptConfig.FRAMEWORK_SPECIFIC]
+            ).invoke(
                 {"tests": tests, "models": models, "api_definition": api_definition}
             )
         )
@@ -181,6 +222,6 @@ class LLMService:
         for file in files:
             self.logger.info(f"  - {file['path']}")
 
-        self.create_ai_chain(PromptConfig.FIX_TYPESCRIPT).invoke(
+        self.create_ai_chain([PromptConfig.FIX_TYPESCRIPT]).invoke(
             {"files": files, "messages": messages}
         )

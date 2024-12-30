@@ -167,3 +167,9 @@ describe("Get Booking", () => {{
 ```yaml
 {api_definition}
 ```
+
+## Additional Models
+
+```json
+{additional_models}
+```

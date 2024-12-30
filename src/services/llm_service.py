@@ -10,6 +10,7 @@ from langchain_core.tools import BaseTool
 from .file_service import FileService
 from ..configuration.config import Config
 from ..ai_tools.file_creation_tool import FileCreationTool
+from ..ai_tools.file_reading_tool import FileReadingTool
 from ..ai_tools.tool_converters import convert_tool_for_model
 from ..utils.logger import Logger
 
@@ -22,6 +23,8 @@ class PromptConfig:
     FIRST_TEST = "./prompts/create-first-test.txt"
     TESTS = "./prompts/create-tests.txt"
     FIX_TYPESCRIPT = "./prompts/fix-typescript.txt"
+    SUMMARY = "./prompts/generate-model-summary.txt"
+    ADD_INFO = "./prompts/add-models-context.txt"
     ADDITIONAL_TESTS = "./prompts/create-additional-tests.txt"
 
 
@@ -44,6 +47,7 @@ class LLMService:
             tools (Optional[List[BaseTool]]): Optional list of tools
         """
         self.config = config
+        self.file_service = file_service
         self.logger = Logger.get_logger(__name__)
         self.tools = tools or [FileCreationTool(config, file_service)]
 
@@ -89,7 +93,10 @@ class LLMService:
             raise
 
     def create_ai_chain(
-        self, prompt_path: str, additional_tools: Optional[List[BaseTool]] = None
+        self,
+        prompt_path: str,
+        additional_tools: Optional[List[BaseTool]] = None,
+        tool_to_use: Optional[str] = None,
     ) -> Any:
         """
         Create a flexible AI chain with tool support.
@@ -110,7 +117,13 @@ class LLMService:
             )
 
             converted_tools = [convert_tool_for_model(tool, llm) for tool in all_tools]
-            llm_with_tools = llm.bind_tools(converted_tools)
+
+            if tool_to_use is not None:
+                llm_with_tools = llm.bind_tools(
+                    converted_tools, tool_choice=tool_to_use
+                )
+            else:
+                llm_with_tools = llm.bind_tools(converted_tools)
 
             def process_response(response):
                 tool_map = {tool.name.lower(): tool for tool in all_tools}
@@ -147,13 +160,43 @@ class LLMService:
         )
 
     def generate_first_test(
-        self, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
+        self,
+        api_definition: Dict[str, Any],
+        models: List[Dict[str, Any]],
+        additional_models: List[Dict[str, Any]],
     ) -> List[Dict[str, Any]]:
         """Generate first test from API definition and models."""
         return json.loads(
             self.create_ai_chain(PromptConfig.FIRST_TEST).invoke(
-                {"api_definition": api_definition, "models": models}
+                {
+                    "api_definition": api_definition,
+                    "models": models,
+                    "additional_models": additional_models,
+                }
             )
+        )
+
+    def generate_service_summary(self, models: List[Dict[str, Any]]):
+        """Generate a summary for a given service model"""
+        # TODO: This should use a smaller model (e.g. Haiku)
+        return self.create_ai_chain(PromptConfig.SUMMARY).invoke({"models": models})
+
+    def get_additional_models(
+        self,
+        relevant_models: Dict[str, Any],
+        available_models: Dict[str, Any],
+    ):
+        """Trigger read file tool to decide what additional model info is needed"""
+        self.logger.info(f"\nGetting additional models...")
+        return self.create_ai_chain(
+            PromptConfig.ADD_INFO,
+            [FileReadingTool(self.config, self.file_service)],
+            "read_files",
+        ).invoke(
+            {
+                "available_models": available_models,
+                "relevant_models": relevant_models,
+            }
         )
 
     def generate_additional_tests(
@@ -161,11 +204,17 @@ class LLMService:
         tests: List[Dict[str, Any]],
         models: List[Dict[str, Any]],
         api_definition: Dict[str, Any],
+        additional_models: List[Dict[str, Any]],
     ) -> List[Dict[str, Any]]:
         """Generate additional tests from tests, models and an API definition."""
         return json.loads(
             self.create_ai_chain(PromptConfig.ADDITIONAL_TESTS).invoke(
-                {"tests": tests, "models": models, "api_definition": api_definition}
+                {
+                    "tests": tests,
+                    "models": models,
+                    "api_definition": api_definition,
+                    "additional_models": additional_models,
+                }
             )
         )
 

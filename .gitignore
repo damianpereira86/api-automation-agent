@@ -67,3 +67,6 @@ target/
 # Framework results
 /generated/*
 /logs/*
+
+# Mac specific
+.DS_Store

@@ -23,6 +23,7 @@ class PromptConfig:
     TESTS = "./prompts/create-tests.txt"
     FIX_TYPESCRIPT = "./prompts/fix-typescript.txt"
     ADDITIONAL_TESTS = "./prompts/create-additional-tests.txt"
+    FRAMEWORK_DOCUMENTATION = "./prompts/framework-documentation.txt"
 
 
 class LLMService:
@@ -132,17 +133,33 @@ class LLMService:
 
     def generate_dot_env(self, api_definition: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate .env file configuration."""
+
+        framework_documentation = self._load_prompt(
+            PromptConfig.FRAMEWORK_DOCUMENTATION
+        )
+
         return json.loads(
             self.create_ai_chain(PromptConfig.DOT_ENV).invoke(
-                {"api_definition": api_definition}
+                {
+                    "framework_documentation": framework_documentation,
+                    "api_definition": api_definition,
+                }
             )
         )
 
     def generate_models(self, api_definition: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate models from API definition."""
+
+        framework_documentation = self._load_prompt(
+            PromptConfig.FRAMEWORK_DOCUMENTATION
+        )
+
         return json.loads(
             self.create_ai_chain(PromptConfig.MODELS).invoke(
-                {"api_definition": api_definition}
+                {
+                    "framework_documentation": framework_documentation,
+                    "api_definition": api_definition,
+                }
             )
         )
 
@@ -150,9 +167,18 @@ class LLMService:
         self, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Generate first test from API definition and models."""
+
+        framework_documentation = self._load_prompt(
+            PromptConfig.FRAMEWORK_DOCUMENTATION
+        )
+
         return json.loads(
             self.create_ai_chain(PromptConfig.FIRST_TEST).invoke(
-                {"api_definition": api_definition, "models": models}
+                {
+                    "framework_documentation": framework_documentation,
+                    "api_definition": api_definition,
+                    "models": models,
+                }
             )
         )
 
@@ -163,9 +189,19 @@ class LLMService:
         api_definition: Dict[str, Any],
     ) -> List[Dict[str, Any]]:
         """Generate additional tests from tests, models and an API definition."""
+
+        framework_documentation = self._load_prompt(
+            PromptConfig.FRAMEWORK_DOCUMENTATION
+        )
+
         return json.loads(
             self.create_ai_chain(PromptConfig.ADDITIONAL_TESTS).invoke(
-                {"tests": tests, "models": models, "api_definition": api_definition}
+                {
+                    "framework_documentation": framework_documentation,
+                    "tests": tests,
+                    "models": models,
+                    "api_definition": api_definition,
+                }
             )
         )
 

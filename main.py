@@ -12,6 +12,7 @@ from src.configuration.config import Config, GenerationOptions, Envs
 from src.container import Container
 from src.framework_generator import FrameworkGenerator
 from src.utils.logger import Logger
+from src.utils.repo_creator import create_github_repo, upload_directory_to_github
 
 
 @inject
@@ -39,6 +40,7 @@ def main(
                 "endpoint": args.endpoint,
                 "generate": GenerationOptions(args.generate),
                 "use_existing_framework": args.use_existing_framework,
+                "auto_create_repo": args.auto_create_repo,
             }
         )
 
@@ -59,6 +61,30 @@ def main(
         framework_generator.run_final_checks(config.generate)
 
         logger.info("\n✅ Framework generation completed successfully!")
+
+        if args.auto_create_repo:
+            logger.info("⚡ Repository creation is enabled.")
+
+            github_token = os.getenv("GITHUB_TOKEN")
+            if not github_token:
+                raise ValueError(
+                    "❌ GitHub token not found. Set GITHUB_TOKEN in your .env file."
+                )
+
+            repo_name = os.path.basename(config.destination_folder)
+            repo_url, owner_repo = create_github_repo(repo_name, github_token)
+
+            if repo_url and owner_repo:
+                logger.info(f"✅ Repository successfully created: {repo_url}")
+
+                success = upload_directory_to_github(
+                    owner_repo, config.destination_folder, github_token
+                )
+                if success:
+                    logger.info("🚀 All generated files have been uploaded to GitHub!")
+                else:
+                    logger.error("❌ Some files failed to upload.")
+
     except FileNotFoundError as e:
         logger.error(f"❌ File not found: {e}")
     except PermissionError as e:

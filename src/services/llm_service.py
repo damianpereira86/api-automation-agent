@@ -6,6 +6,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import BaseTool
+from src.configuration.models import Model
 
 from .file_service import FileService
 from ..configuration.config import Config
@@ -51,14 +52,20 @@ class LLMService:
         self.logger = Logger.get_logger(__name__)
         self.tools = tools or [FileCreationTool(config, file_service)]
 
-    def _select_language_model(self) -> BaseLanguageModel:
+    def _select_language_model(
+        self, language_model: Optional[Model] = None
+    ) -> BaseLanguageModel:
         """
         Select and configure the appropriate language model.
+
 
         Returns:
             BaseLanguageModel: Configured language model
         """
         try:
+            if language_model:
+                self.config.model = language_model
+
             if self.config.model.is_anthropic():
                 return ChatAnthropic(
                     model_name=self.config.model.value,
@@ -97,6 +104,7 @@ class LLMService:
         prompt_path: str,
         additional_tools: Optional[List[BaseTool]] = None,
         tool_to_use: Optional[str] = None,
+        language_model: Optional[BaseLanguageModel] = None,
     ) -> Any:
         """
         Create a flexible AI chain with tool support.
@@ -111,7 +119,7 @@ class LLMService:
         try:
             all_tools = self.tools + (additional_tools or [])
 
-            llm = self._select_language_model()
+            llm = self._select_language_model(language_model)
             prompt_template = ChatPromptTemplate.from_template(
                 self._load_prompt(prompt_path)
             )
@@ -178,8 +186,9 @@ class LLMService:
 
     def generate_service_summary(self, models: List[Dict[str, Any]]):
         """Generate a summary for a given service model"""
-        # TODO: This should use a smaller model (e.g. Haiku)
-        return self.create_ai_chain(PromptConfig.SUMMARY).invoke({"models": models})
+        return self.create_ai_chain(
+            PromptConfig.SUMMARY, language_model=Model.CLAUDE_HAIKU
+        ).invoke({"models": models})
 
     def get_additional_models(
         self,

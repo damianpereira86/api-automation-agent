@@ -72,7 +72,6 @@ class FrameworkGenerator:
         """Process the API definitions and generate models and tests"""
         try:
             self.logger.info("\nProcessing API definitions")
-            models = None
             all_generated_models_info = []
             path_chunks = [
                 path for path in merged_api_definition_list if path["type"] == "path"

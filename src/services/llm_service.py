@@ -118,7 +118,7 @@ class LLMService:
 
             converted_tools = [convert_tool_for_model(tool, llm) for tool in all_tools]
 
-            if tool_to_use is not None:
+            if tool_to_use:
                 llm_with_tools = llm.bind_tools(
                     converted_tools, tool_choice=tool_to_use
                 )

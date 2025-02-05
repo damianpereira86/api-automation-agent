@@ -73,14 +73,16 @@ class FrameworkGenerator:
         try:
             self.logger.info("\nProcessing API definitions")
             all_generated_models_info = []
-            path_chunks = [
-                path for path in merged_api_definition_list if path["type"] == "path"
-            ]
-            verb_chunks = [
-                verb for verb in merged_api_definition_list if verb["type"] == "verb"
-            ]
+            api_paths = []
+            api_verbs = []
 
-            for path in path_chunks:
+            for definition in merged_api_definition_list:
+                if definition["type"] == "path":
+                    api_paths.append(definition)
+                elif definition["type"] == "verb":
+                    api_verbs.append(definition)
+
+            for path in api_paths:
                 if not self._should_process_endpoint(path["path"]):
                     continue
 
@@ -100,7 +102,7 @@ class FrameworkGenerator:
                 GenerationOptions.MODELS_AND_FIRST_TEST,
                 GenerationOptions.MODELS_AND_TESTS,
             ):
-                for verb in verb_chunks:
+                for verb in api_verbs:
                     self._generate_tests(
                         verb, all_generated_models_info, generate_tests
                     )

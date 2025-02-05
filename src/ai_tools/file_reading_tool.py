@@ -36,17 +36,15 @@ class FileReadingTool(BaseTool):
 
         for file_path in files:
             try:
-                file_spec = FileSpec(
-                    path=file_path,
-                    fileContent=self.file_service.read_file(
-                        os.path.join(self.config.destination_folder, file_path)
-                    ),
+                file_content = self.file_service.read_file(
+                    os.path.join(self.config.destination_folder, file_path)
                 )
-
-                all_read_files.append(file_spec)
-
             except Exception as e:
-                self.logger.error(f"Error reading file: {e}")
+                self.logger.error(f"Error reading file {file_path}: {e}")
+                file_content = None
+
+            file_spec = FileSpec(path=file_path, fileContent=file_content)
+            all_read_files.append(file_spec)
 
         self.logger.info(f"Successfully read {len(all_read_files)} files")
         return all_read_files

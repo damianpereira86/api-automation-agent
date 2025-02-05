@@ -52,5 +52,5 @@ class FileReadingTool(BaseTool):
         return all_read_files
 
     # TODO: Implement async file reading
-    async def _arun(self, files: List[str]) -> str:
+    async def _arun(self, files: List[str]) -> List[FileSpec]:
         return self._run(files)

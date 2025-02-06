@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import List, Type, Dict, Any
+from typing import List, Type, Dict, Any, Optional
 
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel
@@ -30,8 +30,7 @@ class FileCreationTool(BaseTool):
     def _run(self, files: List[FileSpec]) -> str:
         try:
             created_files = self.file_service.create_files(
-                destination_folder=self.config.destination_folder,
-                files=files
+                destination_folder=self.config.destination_folder, files=files
             )
             self.logger.info(f"Successfully created {len(created_files)} files")
             return json.dumps([file_spec.model_dump() for file_spec in files])
@@ -42,7 +41,9 @@ class FileCreationTool(BaseTool):
     async def _arun(self, files: List[FileSpec]) -> str:
         return self._run(files)
 
-    def _parse_input(self, tool_input: str | Dict) -> Dict[str, Any]:
+    def _parse_input(
+        self, tool_input: str | Dict, tool_call_id: Optional[str]
+    ) -> Dict[str, Any]:
         if isinstance(tool_input, str):
             data = json.loads(tool_input)
         else:

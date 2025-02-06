@@ -163,10 +163,6 @@ describe("Get Booking", () => {{
 {models}
 ```
 
-```json
-{additional_models}
-```
-
 ## OpenAPI Definition
 
 ```yaml

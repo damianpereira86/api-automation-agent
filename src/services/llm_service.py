@@ -1,6 +1,8 @@
 import json
+import logging
 from typing import Any, Dict, List, Optional
 
+import pydantic
 from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
 from langchain_core.language_models import BaseLanguageModel
@@ -53,7 +55,7 @@ class LLMService:
         self.tools = tools or [FileCreationTool(config, file_service)]
 
     def _select_language_model(
-        self, language_model: Optional[Model] = None
+        self, language_model: Optional[Model] = None, override: bool = False
     ) -> BaseLanguageModel:
         """
         Select and configure the appropriate language model.
@@ -63,20 +65,24 @@ class LLMService:
             BaseLanguageModel: Configured language model
         """
         try:
-            if language_model:
+            if language_model and override:
                 self.config.model = language_model
 
             if self.config.model.is_anthropic():
                 return ChatAnthropic(
                     model_name=self.config.model.value,
                     temperature=1,
-                    api_key=self.config.anthropic_api_key,
-                    max_tokens=8192,
+                    api_key=pydantic.SecretStr(self.config.anthropic_api_key),
+                    timeout=None,
+                    stop=None,
+                    max_retries=3,
+                    max_tokens_to_sample=8192,
                 )
             return ChatOpenAI(
-                model_name=self.config.model.value,
+                model=self.config.model.value,
                 temperature=1,
-                api_key=self.config.openai_api_key,
+                max_retries=3,
+                api_key=pydantic.SecretStr(self.config.openai_api_key),
             )
         except Exception as e:
             self.logger.error(f"Model initialization error: {e}")
@@ -104,7 +110,7 @@ class LLMService:
         prompt_path: str,
         additional_tools: Optional[List[BaseTool]] = None,
         tool_to_use: Optional[str] = None,
-        language_model: Optional[BaseLanguageModel] = None,
+        language_model: Optional[Model] = None,
     ) -> Any:
         """
         Create a flexible AI chain with tool support.
@@ -112,6 +118,8 @@ class LLMService:
         Args:
             prompt_path (str): Path to the prompt template
             additional_tools (Optional[List[BaseTool]]): Additional tools to bind
+            tool_to_use (Optional[str]): Name of the tool to use
+            language_model (Optional[BaseLanguageModel]): Language model to use
 
         Returns:
             Configured AI processing chain
@@ -168,19 +176,12 @@ class LLMService:
         )
 
     def generate_first_test(
-        self,
-        api_definition: Dict[str, Any],
-        models: List[Dict[str, Any]],
-        additional_models: List[Dict[str, Any]],
+        self, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Generate first test from API definition and models."""
         return json.loads(
             self.create_ai_chain(PromptConfig.FIRST_TEST).invoke(
-                {
-                    "api_definition": api_definition,
-                    "models": models,
-                    "additional_models": additional_models,
-                }
+                {"api_definition": api_definition, "models": models}
             )
         )
 
@@ -192,8 +193,8 @@ class LLMService:
 
     def get_additional_models(
         self,
-        relevant_models: Dict[str, Any],
-        available_models: Dict[str, Any],
+        relevant_models: List[Dict[str, Any]],
+        available_models: List[Dict[str, Any]],
     ):
         """Trigger read file tool to decide what additional model info is needed"""
         self.logger.info(f"\nGetting additional models...")
@@ -203,8 +204,8 @@ class LLMService:
             "read_files",
         ).invoke(
             {
-                "available_models": available_models,
                 "relevant_models": relevant_models,
+                "available_models": available_models,
             }
         )
 
@@ -213,7 +214,6 @@ class LLMService:
         tests: List[Dict[str, Any]],
         models: List[Dict[str, Any]],
         api_definition: Dict[str, Any],
-        additional_models: List[Dict[str, Any]],
     ) -> List[Dict[str, Any]]:
         """Generate additional tests from tests, models and an API definition."""
         return json.loads(
@@ -222,7 +222,6 @@ class LLMService:
                     "tests": tests,
                     "models": models,
                     "api_definition": api_definition,
-                    "additional_models": additional_models,
                 }
             )
         )

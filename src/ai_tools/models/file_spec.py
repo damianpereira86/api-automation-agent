@@ -8,3 +8,6 @@ class FileSpec(BaseModel):
         default=None,
         description="The content of the file. Must always be enclosed with double quotes for later parsing into JSON. Escape characters that could cause problems in later json parsing of this attribute using \\ but dont escape the ' character specifically",
     )
+
+    def to_json(self):
+        return {"path": self.path, "fileContent": self.fileContent}

@@ -352,7 +352,3 @@ describe("Get Booking", () => {{
 ```json
 {models}
 ```
-
-```json
-{additional_models}
-```

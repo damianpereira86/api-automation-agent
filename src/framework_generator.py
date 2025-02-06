@@ -1,5 +1,6 @@
 from typing import Optional, List, Dict, Any
 
+from .ai_tools.models.file_spec import FileSpec
 from .configuration.config import Config, GenerationOptions
 from .processors.swagger_processor import SwaggerProcessor
 from .services.command_service import CommandService
@@ -162,13 +163,13 @@ class FrameworkGenerator:
     ):
         """Generate tests for a specific verb (HTTP method) in the API definition"""
         try:
-            relevant_models = None
+            relevant_models = []
             other_models = []
             for model in all_models:
                 if api_verb["path"] == model["path"] or str(
                     api_verb["path"]
                 ).startswith(model["path"] + "/"):
-                    relevant_models = model["models"]
+                    relevant_models.append(model["models"])
                 else:
                     other_models.append(
                         {
@@ -182,24 +183,29 @@ class FrameworkGenerator:
                 f"\nGenerating first test for path: {api_verb['path']} and verb: {api_verb['verb']}"
             )
 
-            additional_models = self.llm_service.get_additional_models(
-                relevant_models,
-                other_models,
-            )
-
-            self.logger.info(
-                f"\nAdding additional models: {[model.path for model in additional_models]}"
-            )
+            if other_models:
+                additional_models: List[FileSpec] = (
+                    self.llm_service.get_additional_models(
+                        relevant_models,
+                        other_models,
+                    )
+                )
+                self.logger.info(
+                    f"\nAdding additional models: {[model.path for model in additional_models]}"
+                )
+                relevant_models.extend(map(lambda x: x.to_json(), additional_models))
 
             tests = self.llm_service.generate_first_test(
-                api_verb["yaml"], relevant_models, additional_models
+                api_verb["yaml"], relevant_models
             )
             if tests:
                 self.tests_count += 1
                 self._run_code_quality_checks(tests)
                 if generate_tests == GenerationOptions.MODELS_AND_TESTS:
                     self._generate_additional_tests(
-                        tests, relevant_models, api_verb, additional_models
+                        tests,
+                        relevant_models,
+                        api_verb,
                     )
         except Exception as e:
             self._log_error(
@@ -213,7 +219,6 @@ class FrameworkGenerator:
         tests: List[Dict[str, Any]],
         models: List[Dict[str, Any]],
         api_definition: Dict[str, Any],
-        additional_models: List[Dict[str, Any]],
     ):
         """Generate additional tests based on the initial test and models"""
         try:
@@ -221,7 +226,7 @@ class FrameworkGenerator:
                 f"\nGenerating additional tests for path: {api_definition['path']} and verb: {api_definition['verb']}"
             )
             additional_tests = self.llm_service.generate_additional_tests(
-                tests, models, api_definition["yaml"], additional_models
+                tests, models, api_definition["yaml"]
             )
             if additional_tests:
                 self._run_code_quality_checks(additional_tests)

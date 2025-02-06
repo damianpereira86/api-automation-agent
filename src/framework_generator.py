@@ -103,6 +103,8 @@ class FrameworkGenerator:
                 GenerationOptions.MODELS_AND_TESTS,
             ):
                 for verb in api_verbs:
+                    if not self._should_process_endpoint(verb["path"]):
+                        continue
                     self._generate_tests(
                         verb, all_generated_models_info, generate_tests
                     )
@@ -154,7 +156,7 @@ class FrameworkGenerator:
 
     def _generate_tests(
         self,
-        verb_chunk: Dict[str, Any],
+        api_verb: Dict[str, Any],
         all_models: List[Dict[str, Any]],
         generate_tests: GenerationOptions,
     ):
@@ -163,8 +165,8 @@ class FrameworkGenerator:
             relevant_models = None
             other_models = []
             for model in all_models:
-                if verb_chunk["path"] == model["path"] or str(
-                    verb_chunk["path"]
+                if api_verb["path"] == model["path"] or str(
+                    api_verb["path"]
                 ).startswith(model["path"] + "/"):
                     relevant_models = model["models"]
                 else:
@@ -177,7 +179,7 @@ class FrameworkGenerator:
                     )
 
             self.logger.info(
-                f"\nGenerating first test for path: {verb_chunk['path']} and verb: {verb_chunk['verb']}"
+                f"\nGenerating first test for path: {api_verb['path']} and verb: {api_verb['verb']}"
             )
 
             additional_models = self.llm_service.get_additional_models(
@@ -186,22 +188,22 @@ class FrameworkGenerator:
             )
 
             self.logger.info(
-                f"\nAdding additional models: {[model['path'] for model in additional_models]}"
+                f"\nAdding additional models: {[model.path for model in additional_models]}"
             )
 
             tests = self.llm_service.generate_first_test(
-                verb_chunk["yaml"], relevant_models, additional_models
+                api_verb["yaml"], relevant_models, additional_models
             )
             if tests:
                 self.tests_count += 1
                 self._run_code_quality_checks(tests)
                 if generate_tests == GenerationOptions.MODELS_AND_TESTS:
                     self._generate_additional_tests(
-                        tests, relevant_models, verb_chunk, additional_models
+                        tests, relevant_models, api_verb, additional_models
                     )
         except Exception as e:
             self._log_error(
-                f"Error processing verb definition for {verb_chunk['path']} - {verb_chunk['verb']}",
+                f"Error processing verb definition for {api_verb['path']} - {api_verb['verb']}",
                 e,
             )
             raise

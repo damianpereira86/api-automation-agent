@@ -1,15 +1,19 @@
 import json
+import logging
 from typing import Any, Dict, List, Optional
 
+import pydantic
 from langchain_anthropic import ChatAnthropic
 from langchain_openai import ChatOpenAI
 from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import BaseTool
+from src.configuration.models import Model
 
 from .file_service import FileService
 from ..configuration.config import Config
 from ..ai_tools.file_creation_tool import FileCreationTool
+from ..ai_tools.file_reading_tool import FileReadingTool
 from ..ai_tools.tool_converters import convert_tool_for_model
 from ..utils.logger import Logger
 
@@ -22,6 +26,8 @@ class PromptConfig:
     FIRST_TEST = "./prompts/create-first-test.txt"
     TESTS = "./prompts/create-tests.txt"
     FIX_TYPESCRIPT = "./prompts/fix-typescript.txt"
+    SUMMARY = "./prompts/generate-model-summary.txt"
+    ADD_INFO = "./prompts/add-models-context.txt"
     ADDITIONAL_TESTS = "./prompts/create-additional-tests.txt"
 
 
@@ -44,28 +50,39 @@ class LLMService:
             tools (Optional[List[BaseTool]]): Optional list of tools
         """
         self.config = config
+        self.file_service = file_service
         self.logger = Logger.get_logger(__name__)
         self.tools = tools or [FileCreationTool(config, file_service)]
 
-    def _select_language_model(self) -> BaseLanguageModel:
+    def _select_language_model(
+        self, language_model: Optional[Model] = None, override: bool = False
+    ) -> BaseLanguageModel:
         """
         Select and configure the appropriate language model.
+
 
         Returns:
             BaseLanguageModel: Configured language model
         """
         try:
+            if language_model and override:
+                self.config.model = language_model
+
             if self.config.model.is_anthropic():
                 return ChatAnthropic(
                     model_name=self.config.model.value,
                     temperature=1,
-                    api_key=self.config.anthropic_api_key,
-                    max_tokens=8192,
+                    api_key=pydantic.SecretStr(self.config.anthropic_api_key),
+                    timeout=None,
+                    stop=None,
+                    max_retries=3,
+                    max_tokens_to_sample=8192,
                 )
             return ChatOpenAI(
-                model_name=self.config.model.value,
+                model=self.config.model.value,
                 temperature=1,
-                api_key=self.config.openai_api_key,
+                max_retries=3,
+                api_key=pydantic.SecretStr(self.config.openai_api_key),
             )
         except Exception as e:
             self.logger.error(f"Model initialization error: {e}")
@@ -89,7 +106,11 @@ class LLMService:
             raise
 
     def create_ai_chain(
-        self, prompt_path: str, additional_tools: Optional[List[BaseTool]] = None
+        self,
+        prompt_path: str,
+        additional_tools: Optional[List[BaseTool]] = None,
+        tool_to_use: Optional[str] = None,
+        language_model: Optional[Model] = None,
     ) -> Any:
         """
         Create a flexible AI chain with tool support.
@@ -97,6 +118,8 @@ class LLMService:
         Args:
             prompt_path (str): Path to the prompt template
             additional_tools (Optional[List[BaseTool]]): Additional tools to bind
+            tool_to_use (Optional[str]): Name of the tool to use
+            language_model (Optional[BaseLanguageModel]): Language model to use
 
         Returns:
             Configured AI processing chain
@@ -104,13 +127,19 @@ class LLMService:
         try:
             all_tools = self.tools + (additional_tools or [])
 
-            llm = self._select_language_model()
+            llm = self._select_language_model(language_model)
             prompt_template = ChatPromptTemplate.from_template(
                 self._load_prompt(prompt_path)
             )
 
             converted_tools = [convert_tool_for_model(tool, llm) for tool in all_tools]
-            llm_with_tools = llm.bind_tools(converted_tools)
+
+            if tool_to_use:
+                llm_with_tools = llm.bind_tools(
+                    converted_tools, tool_choice=tool_to_use
+                )
+            else:
+                llm_with_tools = llm.bind_tools(converted_tools)
 
             def process_response(response):
                 tool_map = {tool.name.lower(): tool for tool in all_tools}
@@ -156,6 +185,30 @@ class LLMService:
             )
         )
 
+    def generate_service_summary(self, models: List[Dict[str, Any]]):
+        """Generate a summary for a given service model"""
+        return self.create_ai_chain(
+            PromptConfig.SUMMARY, language_model=Model.CLAUDE_HAIKU
+        ).invoke({"models": models})
+
+    def get_additional_models(
+        self,
+        relevant_models: List[Dict[str, Any]],
+        available_models: List[Dict[str, Any]],
+    ):
+        """Trigger read file tool to decide what additional model info is needed"""
+        self.logger.info(f"\nGetting additional models...")
+        return self.create_ai_chain(
+            PromptConfig.ADD_INFO,
+            [FileReadingTool(self.config, self.file_service)],
+            "read_files",
+        ).invoke(
+            {
+                "relevant_models": relevant_models,
+                "available_models": available_models,
+            }
+        )
+
     def generate_additional_tests(
         self,
         tests: List[Dict[str, Any]],
@@ -165,7 +218,11 @@ class LLMService:
         """Generate additional tests from tests, models and an API definition."""
         return json.loads(
             self.create_ai_chain(PromptConfig.ADDITIONAL_TESTS).invoke(
-                {"tests": tests, "models": models, "api_definition": api_definition}
+                {
+                    "tests": tests,
+                    "models": models,
+                    "api_definition": api_definition,
+                }
             )
         )
 

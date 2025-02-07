@@ -1,5 +1,6 @@
 from typing import Optional, List, Dict, Any
 
+from .ai_tools.models.file_spec import FileSpec
 from .configuration.config import Config, GenerationOptions
 from .processors.swagger_processor import SwaggerProcessor
 from .services.command_service import CommandService
@@ -72,19 +73,42 @@ class FrameworkGenerator:
         """Process the API definitions and generate models and tests"""
         try:
             self.logger.info("\nProcessing API definitions")
-            models = None
+            all_generated_models_info = []
+            api_paths = []
+            api_verbs = []
 
-            for api_definition in merged_api_definition_list:
-                if not self._should_process_endpoint(api_definition["path"]):
+            for definition in merged_api_definition_list:
+                if definition["type"] == "path":
+                    api_paths.append(definition)
+                elif definition["type"] == "verb":
+                    api_verbs.append(definition)
+
+            for path in api_paths:
+                if not self._should_process_endpoint(path["path"]):
                     continue
 
-                if api_definition["type"] == "path":
-                    models = self._generate_models(api_definition)
-                elif api_definition["type"] == "verb" and generate_tests in (
-                    GenerationOptions.MODELS_AND_FIRST_TEST,
-                    GenerationOptions.MODELS_AND_TESTS,
-                ):
-                    self._generate_tests(api_definition, models, generate_tests)
+                models = self._generate_models(path)
+                service_summary = self._generate_service_summary(models)
+
+                all_generated_models_info.append(
+                    {
+                        "path": path["path"],
+                        "summary": service_summary,
+                        "files": [model["path"] for model in models],
+                        "models": models,
+                    }
+                )
+
+            if generate_tests in (
+                GenerationOptions.MODELS_AND_FIRST_TEST,
+                GenerationOptions.MODELS_AND_TESTS,
+            ):
+                for verb in api_verbs:
+                    if not self._should_process_endpoint(verb["path"]):
+                        continue
+                    self._generate_tests(
+                        verb, all_generated_models_info, generate_tests
+                    )
 
             self.logger.info(
                 f"\nGeneration complete. {self.models_count} models and {self.tests_count} tests were generated."
@@ -133,24 +157,59 @@ class FrameworkGenerator:
 
     def _generate_tests(
         self,
-        api_definition: Dict[str, Any],
-        models: List[Dict[str, Any]],
+        api_verb: Dict[str, Any],
+        all_models: List[Dict[str, Any]],
         generate_tests: GenerationOptions,
     ):
         """Generate tests for a specific verb (HTTP method) in the API definition"""
         try:
+            relevant_models = []
+            other_models = []
+            for model in all_models:
+                if api_verb["path"] == model["path"] or str(
+                    api_verb["path"]
+                ).startswith(model["path"] + "/"):
+                    relevant_models.append(model["models"])
+                else:
+                    other_models.append(
+                        {
+                            "path": model["path"],
+                            "summary": model["summary"],
+                            "files": model["files"],
+                        }
+                    )
+
             self.logger.info(
-                f"\nGenerating first test for path: {api_definition['path']} and verb: {api_definition['verb']}"
+                f"\nGenerating first test for path: {api_verb['path']} and verb: {api_verb['verb']}"
             )
-            tests = self.llm_service.generate_first_test(api_definition["yaml"], models)
+
+            if other_models:
+                additional_models: List[FileSpec] = (
+                    self.llm_service.get_additional_models(
+                        relevant_models,
+                        other_models,
+                    )
+                )
+                self.logger.info(
+                    f"\nAdding additional models: {[model.path for model in additional_models]}"
+                )
+                relevant_models.extend(map(lambda x: x.to_json(), additional_models))
+
+            tests = self.llm_service.generate_first_test(
+                api_verb["yaml"], relevant_models
+            )
             if tests:
                 self.tests_count += 1
                 self._run_code_quality_checks(tests)
                 if generate_tests == GenerationOptions.MODELS_AND_TESTS:
-                    self._generate_additional_tests(tests, models, api_definition)
+                    self._generate_additional_tests(
+                        tests,
+                        relevant_models,
+                        api_verb,
+                    )
         except Exception as e:
             self._log_error(
-                f"Error processing verb definition for {api_definition['path']} - {api_definition['verb']}",
+                f"Error processing verb definition for {api_verb['path']} - {api_verb['verb']}",
                 e,
             )
             raise
@@ -194,4 +253,15 @@ class FrameworkGenerator:
             self.command_service.run_linter()
         except Exception as e:
             self._log_error("Error during code quality checks", e)
+            raise
+
+    def _generate_service_summary(self, models: List[Dict[str, Any]]):
+        """Generate a summary of a service"""
+        self.logger.info(f"\nGenerating service summary for...")
+        try:
+            summary = self.llm_service.generate_service_summary(models)
+            self.logger.info(f"Service summary: {summary}")
+            return summary
+        except Exception as e:
+            self._log_error("Error during summary generation", e)
             raise

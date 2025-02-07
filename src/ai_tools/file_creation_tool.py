@@ -44,14 +44,19 @@ class FileCreationTool(BaseTool):
     def _parse_input(
         self, tool_input: str | Dict, tool_call_id: Optional[str] = None
     ) -> Dict[str, Any]:
-
         if isinstance(tool_input, str):
             data = json.loads(tool_input)
         else:
             data = tool_input
 
+        self.logger.debug(f"Received data['files']: {data.get('files', 'Not found')}")
+
         if isinstance(data["files"], str):
-            files_data = json.loads(data["files"])
+            try:
+                files_data = json.loads(data["files"])
+            except json.JSONDecodeError as e:
+                self.logger.error(f"Error decoding JSON in 'files': {e}")
+                raise
         else:
             files_data = data["files"]
 

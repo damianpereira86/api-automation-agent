@@ -13,7 +13,7 @@ Your task is to create additional API automation test code based on an initial t
 - For non-successful status codes (e.g., 400), do not use try/catch blocks. Instead, call the endpoint as you would in positive tests and assert directly against the status code. Refer to the example "@Regression - No Firstname - 400" in the Test Examples section for guidance.
 - Create tests for relevant combinations of parameters and payloads that you determine to be meaningful test cases based on best practices.
 - Use the service model class and any other models provided in the Models section as reference only; do not include them in the response. Paths in the imports must match the paths in the Models section.
-- When applicable, set up test preconditions using other endpoints in the service model class. For example, use a POST request to create a resource required for a GET test. If preconditions apply to several tests, place them in a before or beforeAll hook as needed.
+- When applicable, create test preconditions and postconditions using other endpoints in the service model classes. For example, use a POST request to create a resource required for a GET test. If preconditions apply to several tests, place them in a before or beforeAll hook as needed.
 - Ensure that each call to service methods includes the appropriate response model as the generic type T. If the response type is unknown or unnecessary, pass null. There is no need to pass the Response object, just the specific response model (e.g. bookingService.getBooking<BookingModel>(bookingId);)
 - Use optional chaining (?.) when accessing properties that could potentially be undefined (e.g., response.data?.id.should.equal(orderId);) to avoid errors during runtime.
 - Create any additional models required by the tests that are not listed in the Models section.
@@ -24,6 +24,7 @@ Your task is to create additional API automation test code based on an initial t
 
 The output must contain the function call for all the files generated.
 Generate all files at once.
+Only one test file must be included in the output to replace the one in the First Test section.
 Make sure the output is only the function call and nothing else.
 
 ## Test examples

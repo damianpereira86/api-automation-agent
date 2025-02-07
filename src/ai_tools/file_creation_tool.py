@@ -1,6 +1,6 @@
 import json
 import logging
-from typing import List, Type, Dict, Any, Optional
+from typing import List, Optional, Type, Dict, Any
 
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel
@@ -42,7 +42,7 @@ class FileCreationTool(BaseTool):
         return self._run(files)
 
     def _parse_input(
-        self, tool_input: str | Dict, tool_call_id: Optional[str]
+        self, tool_input: str | Dict, tool_call_id: Optional[str] = None
     ) -> Dict[str, Any]:
         if isinstance(tool_input, str):
             data = json.loads(tool_input)

@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import logging
 from typing import List, Dict, Tuple, Optional, Callable
@@ -161,6 +162,18 @@ class CommandService:
         self._log_message("\nRunning TypeScript compiler...")
         return self.run_command("npx tsc --noEmit")
 
+    def get_generated_test_files(self) -> List[Dict[str, str]]:
+        """Find and return a list of all generated test files."""
+        test_dir = "src/tests/"
+        test_files = []
+
+        for root, _, files in os.walk(test_dir):
+            for file in files:
+                if file.endswith(".spec.ts"):
+                    test_files.append({"path": os.path.join(root, file)})
+
+        return test_files
+
     def run_typescript_compiler_for_files(
         self,
         files: List[Dict[str, str]],
@@ -177,11 +190,33 @@ class CommandService:
         self._log_message("\nRunning tests...")
         return self.run_command("npm run test")
 
-    def run_specific_test(self, files: List[Dict[str, str]]) -> Tuple[bool, str]:
-        """Run specific tests"""
+    def run_specific_test_excluding_errors(
+        self, files: List[Dict[str, str]]
+    ) -> Tuple[bool, str]:
+        """Run specific tests, excluding files with TypeScript compilation errors using --ignore."""
+
+        success, tsc_output = self.run_typescript_compiler()
+
+        error_files = set()
+        if not success:
+            for line in tsc_output.split("\n"):
+                match = re.search(r"(src/tests/.*?\.spec\.ts)", line)
+                if match:
+                    error_files.add(match.group(1))
+
+        if error_files:
+            formatted_errors = "\n".join(f"   - {file}" for file in error_files)
+            self.logger.info(f"❌ Skipping error files:\n{formatted_errors}")
+
+        ignore_flag = f"--ignore {','.join(error_files)}" if error_files else ""
+
+        self.logger.info(ignore_flag)
+
         file_paths = " ".join(file["path"] for file in files)
-        self._log_message(f"\nRunning tests: {file_paths}")
-        return self.run_command(f"mocha {file_paths} --timeout 10000")
+
+        self._log_message(f"\nRunning tests (excluding errors): {file_paths}")
+
+        return self.run_command(f"npx mocha {ignore_flag} {file_paths} --timeout 10000")
 
 
 def build_typescript_compiler_command(files: List[Dict[str, str]]) -> str:

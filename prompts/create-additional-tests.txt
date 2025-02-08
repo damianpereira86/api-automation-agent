@@ -8,7 +8,7 @@ Your task is to create additional API automation test code based on an initial t
 - Your task is to complete the test file in the First Test section with additional tests.
 - Use the first test and the models provided to generate a comprehensive set of tests.
 - Only generate tests for the test file provided.
-- Generate all necessary tests based on your experience and best practices, covering all expected scenarios.
+- Generate all necessary tests based on your experience and best practices, covering all expected scenarios for the endpoint documented on the OpenAPI Definition section.
 - Create tests for every status code listed in the OpenAPI definition section.
 - For non-successful status codes (e.g., 400), do not use try/catch blocks. Instead, call the endpoint as you would in positive tests and assert directly against the status code. Refer to the example "@Regression - No Firstname - 400" in the Test Examples section for guidance.
 - Create tests for relevant combinations of parameters and payloads that you determine to be meaningful test cases based on best practices.

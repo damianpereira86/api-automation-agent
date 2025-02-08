@@ -46,7 +46,7 @@ def main(
         logger.info(f"Destination folder: {config.destination_folder}")
         logger.info(f"Use existing framework: {config.use_existing_framework}")
         logger.info(
-            f"Endpoints: {', '.join(config.endpoint) if config.endpoint else 'All'}"
+            f"Endpoints: {', '.join(config.endpoints) if config.endpoints else 'All'}"
         )
         logger.info(f"Generate: {config.generate}")
         logger.info(f"Model: {config.model}")

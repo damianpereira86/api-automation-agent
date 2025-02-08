@@ -1,6 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional, List
 
 from .models import Model
 
@@ -26,7 +26,7 @@ class Config:
     openai_api_key: str = ""
     api_file_path: str = ""
     destination_folder: str = ""
-    endpoint: str = ""
+    endpoint: Optional[List[str]] = None
     use_existing_framework: bool = False
 
     def update(self, updates: dict[str, Any]):

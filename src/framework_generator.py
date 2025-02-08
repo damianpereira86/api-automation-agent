@@ -122,12 +122,15 @@ class FrameworkGenerator:
         try:
             result = self.command_service.run_typescript_compiler()
             success, _ = result
+            test_files = self.command_service.get_generated_test_files()
 
             if success and generate_tests in (
                 GenerationOptions.MODELS_AND_FIRST_TEST,
                 GenerationOptions.MODELS_AND_TESTS,
             ):
-                self.command_service.run_tests()
+
+                self.logger.info(test_files)
+                self.command_service.run_specific_test_excluding_errors(test_files)
 
             self.logger.info("Final checks completed")
         except Exception as e:

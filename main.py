@@ -36,7 +36,7 @@ def main(
                 "api_file_path": args.api_file_path,
                 "destination_folder": args.destination_folder
                 or config.destination_folder,
-                "endpoint": args.endpoints,
+                "endpoints": args.endpoints,
                 "generate": GenerationOptions(args.generate),
                 "use_existing_framework": args.use_existing_framework,
             }

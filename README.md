@@ -192,19 +192,32 @@ black .
 
 The project implements a dual logging strategy:
 
-1. **Console Output**: User-friendly, simplified format showing only the message content
+1. **Console Output**: By default shows INFO level messages in a user-friendly format
     ```
     Generated service class for Pet endpoints
     Creating test suite for /pet/findByStatus
     ```
 
-2. **File Logging**: Detailed logging with timestamps and metadata in `logs/[framework-name].log`
+2. **File Logging**: Detailed DEBUG level logging with timestamps and metadata in `logs/[framework-name].log`
     ```
+    2024-03-21 14:30:22,531 - generator.services - DEBUG - Initializing service class generator for Pet endpoints
     2024-03-21 14:30:22,531 - generator.services - INFO - Generated service class for Pet endpoints
+    2024-03-21 14:30:23,128 - generator.tests - DEBUG - Loading OpenAPI spec for /pet/findByStatus
     2024-03-21 14:30:23,128 - generator.tests - INFO - Creating test suite for /pet/findByStatus
     ```
 
-The log level can be controlled through the debug flag, with DEBUG level providing more verbose output for troubleshooting.
+### Debug Options
+
+You can control debug levels through environment variables:
+
+1. **Application Debug**: Set `DEBUG=True` in your `.env` file to enable debug-level logging in the console output
+2. **LangChain Debug**: Set `LANGCHAIN_DEBUG=True` to enable detailed logging of LangChain operations
+
+Example `.env` configuration:
+```env
+DEBUG=False          # Default: False (INFO level console output)
+LANGCHAIN_DEBUG=False  # Default: False (disabled)
+```
 
 ## License
 

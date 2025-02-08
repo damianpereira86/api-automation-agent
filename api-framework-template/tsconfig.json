@@ -12,7 +12,6 @@
     "moduleResolution": "nodenext",
     "allowUnusedLabels": false,
     "allowUnreachableCode": false,
-    "exactOptionalPropertyTypes": true,
     "noFallthroughCasesInSwitch": true,
     "noImplicitOverride": true,
     "noImplicitReturns": true,
@@ -22,7 +21,9 @@
     "noUnusedParameters": true,
     "checkJs": true,
     "outDir": "./lib",
-    "rootDir": "./src"
+    "rootDir": "./src",
+    "strictNullChecks": false
   },
   "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

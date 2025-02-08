@@ -17,7 +17,7 @@ class Logger:
 
         # Handlers
         stdout_handler = logging.StreamHandler(sys.stdout)
-        stdout_handler.setLevel(log_level)
+        stdout_handler.setLevel(logging.DEBUG if config.debug else logging.INFO)
         stdout_handler.setFormatter(logging.Formatter(stdout_format))
 
         log_folder = "logs/"
@@ -30,7 +30,7 @@ class Logger:
 
         logging.basicConfig(
             format="%(message)s",
-            level=log_level,
+            level=logging.DEBUG,
             handlers=[stdout_handler, file_handler],
         )
         logging.getLogger("httpx").setLevel(logging.WARNING)

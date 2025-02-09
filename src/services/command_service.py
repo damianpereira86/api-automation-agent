@@ -213,11 +213,15 @@ class CommandService:
             formatted_errors = "\n".join(f"   - {file}" for file in error_files)
             self.logger.info(f"\n❌ Skipping files with errors:\n{formatted_errors}")
 
-        formatted_file_paths = "\n".join(
-            f"   - {file['path'][file['path'].index('src/'):]}"
-            for file in files
-            if any(file["path"].endswith(error) for error in error_files) is False
-        )
+        try:
+            formatted_file_paths = "\n".join(
+                f"   - {os.path.relpath(file['path'], self.config.destination_folder)}"
+                for file in files
+                if not any(file["path"].endswith(error) for error in error_files)
+            )
+        except Exception as e:
+            self.logger.error(f"Error formatting paths: {str(e)}")
+            return False, f"Error formatting paths: {str(e)}"
 
         self.logger.info(f"\n📝 Test files to be executed:\n{formatted_file_paths}\n")
 

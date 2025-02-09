@@ -11,6 +11,7 @@ from src.configuration.cli import CLIArgumentParser
 from src.configuration.config import Config, GenerationOptions, Envs
 from src.container import Container
 from src.framework_generator import FrameworkGenerator
+from src.utils.checkpoint import Checkpoint
 from src.utils.logger import Logger
 
 
@@ -25,6 +26,13 @@ def main(
         logger.info("🚀 Starting the API Framework Generation Process! 🌟")
 
         args = CLIArgumentParser.parse_arguments()
+
+        checkpoint = Checkpoint()
+        last_namespace = checkpoint.get_last_namespace()
+
+        if last_namespace != "default":
+            checkpoint.restore_last_namespace()
+            args.destination_folder = last_namespace
 
         if args.use_existing_framework and not args.destination_folder:
             raise ValueError(
@@ -49,6 +57,12 @@ def main(
         logger.info(f"Generate: {config.generate}")
         logger.info(f"Model: {config.model}")
 
+        if last_namespace == "default":
+            checkpoint.namespace = config.destination_folder
+            checkpoint.save_last_namespace()
+        else:
+            framework_generator.restore_state(last_namespace)
+
         api_definitions = framework_generator.process_api_definition()
 
         if not config.use_existing_framework:
@@ -59,6 +73,7 @@ def main(
         framework_generator.run_final_checks(config.generate)
 
         logger.info("\n✅ Framework generation completed successfully!")
+
     except FileNotFoundError as e:
         logger.error(f"❌ File not found: {e}")
     except PermissionError as e:
@@ -75,10 +90,7 @@ if __name__ == "__main__":
     env = Envs(os.getenv("ENV", "DEV").upper())
 
     # Initialize containers
-    if env == Envs.PROD:
-        config_adapter = ProdConfigAdapter()
-    else:
-        config_adapter = DevConfigAdapter()
+    config_adapter = ProdConfigAdapter() if env == Envs.PROD else DevConfigAdapter()
     processors_adapter = ProcessorsAdapter()
     container = Container(
         config_adapter=config_adapter, processors_adapter=processors_adapter
@@ -90,6 +102,7 @@ if __name__ == "__main__":
 
     Logger.configure_logger(container.config())
     logger = Logger.get_logger(__name__)
+
     try:
         main(logger)
     except Exception as e:

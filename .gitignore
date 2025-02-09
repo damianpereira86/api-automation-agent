@@ -67,3 +67,4 @@ target/
 # Framework results
 /generated/*
 /logs/*
+checkpoints.db

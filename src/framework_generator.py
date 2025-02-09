@@ -120,19 +120,19 @@ class FrameworkGenerator:
     def run_final_checks(self, generate_tests: GenerationOptions):
         """Run final checks like TypeScript compilation and tests"""
         try:
-            result = self.command_service.run_typescript_compiler()
-            success, _ = result
             test_files = self.command_service.get_generated_test_files()
 
-            if success and generate_tests in (
+            if generate_tests in (
                 GenerationOptions.MODELS_AND_FIRST_TEST,
                 GenerationOptions.MODELS_AND_TESTS,
             ):
-
-                self.logger.info(test_files)
-                self.command_service.run_specific_test_excluding_errors(test_files)
+                if not test_files:
+                    self.logger.warning("⚠️ No test files found! Skipping tests.")
+                else:
+                    self.command_service.run_specific_tests_excluding_errors(test_files)
 
             self.logger.info("Final checks completed")
+
         except Exception as e:
             self._log_error("Error during final checks", e)
             raise

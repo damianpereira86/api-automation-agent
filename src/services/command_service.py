@@ -159,13 +159,21 @@ class CommandService:
 
     def run_typescript_compiler(self) -> Tuple[bool, str]:
         """Run the TypeScript compiler"""
-        self._log_message("\nRunning TypeScript compiler...")
+        self._log_message("\nRunning TypeScript compiler...\n")
         return self.run_command("npx tsc --noEmit")
 
     def get_generated_test_files(self) -> List[Dict[str, str]]:
-        """Find and return a list of all generated test files."""
-        test_dir = "src/tests/"
+        """Find and return a list of all generated test files from the correct destination folder."""
+
+        test_dir = os.path.join(self.config.destination_folder, "src", "tests")
         test_files = []
+
+        if not os.path.exists(test_dir):
+            self._log_message(
+                f"⚠️ Test directory '{test_dir}' does not exist. No tests found.",
+                is_error=True,
+            )
+            return []
 
         for root, _, files in os.walk(test_dir):
             for file in files:
@@ -185,15 +193,12 @@ class CommandService:
         compiler_command = build_typescript_compiler_command(files)
         return self.run_command(compiler_command)
 
-    def run_tests(self) -> Tuple[bool, str]:
-        """Run all tests"""
-        self._log_message("\nRunning tests...")
-        return self.run_command("npm run test")
-
-    def run_specific_test_excluding_errors(
+    def run_specific_tests_excluding_errors(
         self, files: List[Dict[str, str]]
     ) -> Tuple[bool, str]:
         """Run specific tests, excluding files with TypeScript compilation errors using --ignore."""
+
+        self.logger.info("\n🛠️ Starting test execution...")
 
         success, tsc_output = self.run_typescript_compiler()
 
@@ -206,17 +211,23 @@ class CommandService:
 
         if error_files:
             formatted_errors = "\n".join(f"   - {file}" for file in error_files)
-            self.logger.info(f"❌ Skipping error files:\n{formatted_errors}")
+            self.logger.info(f"\n❌ Skipping error files:\n{formatted_errors}")
 
-        ignore_flag = f"--ignore {','.join(error_files)}" if error_files else ""
+        formatted_file_paths = "\n".join(
+            (
+                f"   - {file['path'][file['path'].index('src/'):]}"
+                if "src/" in file["path"]
+                else f"   - {file['path']}"
+            )
+            for file in files
+        )
 
-        self.logger.info(ignore_flag)
+        self.logger.info(f"\n📝 Test files to be executed:\n{formatted_file_paths}\n")
 
-        file_paths = " ".join(file["path"] for file in files)
+        ignore_flags = " ".join(f"--ignore {file}" for file in error_files)
+        command = f"npx mocha {ignore_flags} --timeout 10000 --no-warnings".strip()
 
-        self._log_message(f"\nRunning tests (excluding errors): {file_paths}")
-
-        return self.run_command(f"npx mocha {ignore_flag} {file_paths} --timeout 10000")
+        return self.run_command(command)
 
 
 def build_typescript_compiler_command(files: List[Dict[str, str]]) -> str:

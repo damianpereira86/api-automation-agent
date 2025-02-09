@@ -1,4 +1,5 @@
 import os
+import re
 import subprocess
 import logging
 from typing import List, Dict, Tuple, Optional, Callable
@@ -158,8 +159,28 @@ class CommandService:
 
     def run_typescript_compiler(self) -> Tuple[bool, str]:
         """Run the TypeScript compiler"""
-        self._log_message("\nRunning TypeScript compiler...")
+        self._log_message("\nRunning TypeScript compiler...\n")
         return self.run_command("npx tsc --noEmit")
+
+    def get_generated_test_files(self) -> List[Dict[str, str]]:
+        """Find and return a list of all generated test files from the correct destination folder."""
+
+        test_dir = os.path.join(self.config.destination_folder, "src", "tests")
+        test_files = []
+
+        if not os.path.exists(test_dir):
+            self._log_message(
+                f"⚠️ Test directory '{test_dir}' does not exist. No tests found.",
+                is_error=True,
+            )
+            return []
+
+        for root, _, files in os.walk(test_dir):
+            for file in files:
+                if file.endswith(".spec.ts"):
+                    test_files.append({"path": os.path.join(root, file)})
+
+        return test_files
 
     def run_typescript_compiler_for_files(
         self,
@@ -172,16 +193,45 @@ class CommandService:
         compiler_command = build_typescript_compiler_command(files)
         return self.run_command(compiler_command)
 
-    def run_tests(self) -> Tuple[bool, str]:
-        """Run all tests"""
-        self._log_message("\nRunning tests...")
-        return self.run_command("npm run test")
+    def run_specific_tests_excluding_errors(
+        self, files: List[Dict[str, str]]
+    ) -> Tuple[bool, str]:
+        """Run specific tests, excluding files with TypeScript compilation errors using --ignore."""
 
-    def run_specific_test(self, files: List[Dict[str, str]]) -> Tuple[bool, str]:
-        """Run specific tests"""
-        file_paths = " ".join(file["path"] for file in files)
-        self._log_message(f"\nRunning tests: {file_paths}")
-        return self.run_command(f"mocha {file_paths} --timeout 10000")
+        self.logger.info("\n🛠️ Starting test execution...")
+
+        success, tsc_output = self.run_typescript_compiler()
+
+        error_files = set()
+        if not success:
+            for line in tsc_output.split("\n"):
+                match = re.search(r"(src/tests/.*?\.spec\.ts)", line)
+                if match:
+                    error_files.add(os.path.normpath(match.group(1)))
+
+        if error_files:
+            formatted_errors = "\n".join(f"   - {error}" for error in error_files)
+            self.logger.info(f"\n❌ Skipping files with errors:\n{formatted_errors}")
+
+        try:
+            formatted_file_paths = "\n".join(
+                f"   - {os.path.normpath(os.path.relpath(file['path'], self.config.destination_folder))}"
+                for file in files
+                if not any(
+                    os.path.normpath(file["path"]).endswith(error)
+                    for error in error_files
+                )
+            )
+        except Exception as e:
+            self.logger.error(f"Error formatting paths: {str(e)}")
+            return False, f"Error formatting paths: {str(e)}"
+
+        self.logger.info(f"\n📝 Test files to be executed:\n{formatted_file_paths}\n")
+
+        ignore_flags = " ".join(f"--ignore {file}" for file in error_files)
+        command = f"npx mocha {ignore_flags} --timeout 10000 --no-warnings".strip()
+
+        return self.run_command(command)
 
 
 def build_typescript_compiler_command(files: List[Dict[str, str]]) -> str:

@@ -211,7 +211,7 @@ class CommandService:
 
         if error_files:
             formatted_errors = "\n".join(f"   - {file}" for file in error_files)
-            self.logger.info(f"\n❌ Skipping error files:\n{formatted_errors}")
+            self.logger.info(f"\n❌ Skipping files with errors:\n{formatted_errors}")
 
         formatted_file_paths = "\n".join(
             f"   - {file['path'][file['path'].index('src/'):]}"

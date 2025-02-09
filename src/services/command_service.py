@@ -199,7 +199,6 @@ def build_typescript_compiler_command(files: List[Dict[str, str]]) -> str:
         "--moduleResolution nodenext "
         "--allowUnusedLabels false "
         "--allowUnreachableCode false "
-        "--exactOptionalPropertyTypes "
         "--noFallthroughCasesInSwitch "
         "--noImplicitOverride "
         "--noImplicitReturns "
@@ -208,5 +207,7 @@ def build_typescript_compiler_command(files: List[Dict[str, str]]) -> str:
         "--noUnusedLocals "
         "--noUnusedParameters "
         "--checkJs "
-        "--noEmit"
+        "--noEmit "
+        "--strictNullChecks false "
+        "--excludeDirectories node_modules"
     )

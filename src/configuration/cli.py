@@ -16,9 +16,10 @@ class CLIArgumentParser:
             help="Destination folder in which the files will be created (optional).",
         )
         parser.add_argument(
-            "--endpoint",
+            "--endpoints",
             type=str,
-            help="Specify the endpoint to generate the framework for (optional).",
+            nargs="+",
+            help="Specify one or more endpoints to generate the framework for (optional). Example: --endpoint /pets /store",
         )
         parser.add_argument(
             "--generate",

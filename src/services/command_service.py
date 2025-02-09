@@ -207,17 +207,20 @@ class CommandService:
             for line in tsc_output.split("\n"):
                 match = re.search(r"(src/tests/.*?\.spec\.ts)", line)
                 if match:
-                    error_files.add(match.group(1))
+                    error_files.add(os.path.normpath(match.group(1)))
 
         if error_files:
-            formatted_errors = "\n".join(f"   - {file}" for file in error_files)
+            formatted_errors = "\n".join(f"   - {error}" for error in error_files)
             self.logger.info(f"\n❌ Skipping files with errors:\n{formatted_errors}")
 
         try:
             formatted_file_paths = "\n".join(
-                f"   - {os.path.relpath(file['path'], self.config.destination_folder)}"
+                f"   - {os.path.normpath(os.path.relpath(file['path'], self.config.destination_folder))}"
                 for file in files
-                if not any(file["path"].endswith(error) for error in error_files)
+                if not any(
+                    os.path.normpath(file["path"]).endswith(error)
+                    for error in error_files
+                )
             )
         except Exception as e:
             self.logger.error(f"Error formatting paths: {str(e)}")

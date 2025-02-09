@@ -214,12 +214,9 @@ class CommandService:
             self.logger.info(f"\n❌ Skipping error files:\n{formatted_errors}")
 
         formatted_file_paths = "\n".join(
-            (
-                f"   - {file['path'][file['path'].index('src/'):]}"
-                if "src/" in file["path"]
-                else f"   - {file['path']}"
-            )
+            f"   - {file['path'][file['path'].index('src/'):]}"
             for file in files
+            if any(file["path"].endswith(error) for error in error_files) is False
         )
 
         self.logger.info(f"\n📝 Test files to be executed:\n{formatted_file_paths}\n")

@@ -1,6 +1,8 @@
 import json
 import logging
 from typing import List, Optional, Type, Dict, Any
+import json_repair
+
 
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel
@@ -45,20 +47,29 @@ class FileCreationTool(BaseTool):
         self, tool_input: str | Dict, tool_call_id: Optional[str] = None
     ) -> Dict[str, Any]:
         if isinstance(tool_input, str):
-            data = json.loads(tool_input)
+            data = json_repair.loads(tool_input)
         else:
             data = tool_input
 
         self.logger.debug(f"Received data['files']: {data.get('files', 'Not found')}")
 
+        if not isinstance(data, dict):
+            return {"files": []}
+
         if isinstance(data["files"], str):
-            try:
-                files_data = json.loads(data["files"])
-            except json.JSONDecodeError as e:
-                self.logger.error(f"Error decoding JSON in 'files': {e}")
-                raise
+            files_data = json_repair.loads(data["files"])
         else:
             files_data = data["files"]
 
-        file_specs = [FileSpec(**file_spec) for file_spec in files_data]
+        if not isinstance(files_data, list):
+            return {"files": []}
+
+        # Filter out non-dictionary objects
+        valid_files = [f for f in files_data if isinstance(f, dict)]
+        if len(valid_files) != len(files_data):
+            self.logger.info(
+                f"Filtered out {len(files_data) - len(valid_files)} invalid file specifications"
+            )
+
+        file_specs = [FileSpec(**file_spec) for file_spec in valid_files]
         return {"files": file_specs}

@@ -28,9 +28,23 @@ def main(
         args = CLIArgumentParser.parse_arguments()
 
         checkpoint = Checkpoint()
+
         last_namespace = checkpoint.get_last_namespace()
 
-        if last_namespace != "default":
+        def prompt_user_resume_previous_run():
+            while True:
+                user_input = (
+                    input(
+                        "Info related to a previous run was found, would you like to resume? (y/n): "
+                    )
+                    .strip()
+                    .lower()
+                )
+
+                if user_input in {"y", "n"}:
+                    return user_input == "y"
+
+        if last_namespace != "default" and prompt_user_resume_previous_run():
             checkpoint.restore_last_namespace()
             args.destination_folder = last_namespace
 
@@ -57,7 +71,7 @@ def main(
         logger.info(f"Generate: {config.generate}")
         logger.info(f"Model: {config.model}")
 
-        if last_namespace == "default":
+        if last_namespace == "default" or last_namespace != args.destination_folder:
             checkpoint.namespace = config.destination_folder
             checkpoint.save_last_namespace()
         else:
@@ -71,6 +85,8 @@ def main(
 
         framework_generator.generate(api_definitions, config.generate)
         framework_generator.run_final_checks(config.generate)
+
+        checkpoint.clear()
 
         logger.info("\n✅ Framework generation completed successfully!")
 

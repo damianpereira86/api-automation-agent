@@ -150,6 +150,7 @@ class FrameworkGenerator:
             self._log_error("Error processing definitions", e)
             raise
 
+    @Checkpoint.checkpoint()
     def run_final_checks(self, generate_tests: GenerationOptions):
         """Run final checks like TypeScript compilation and tests"""
         try:

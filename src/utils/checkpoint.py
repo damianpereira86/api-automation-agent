@@ -80,8 +80,8 @@ class Checkpoint:
     @staticmethod
     def clear():
         """Clear all stored checkpoints."""
-        if os.path.exists(f"{Checkpoint.DB_NAME}.db"):
-            os.remove(f"{Checkpoint.DB_NAME}.db")
+        if os.path.exists(f"{Checkpoint.DB_NAME}"):
+            os.remove(f"{Checkpoint.DB_NAME}")
             Logger.get_logger(__name__).info("🗑️ Checkpoints cleared.")
 
     @staticmethod

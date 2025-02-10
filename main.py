@@ -32,8 +32,7 @@ def main(
         last_namespace = checkpoint.get_last_namespace()
 
         def prompt_user_resume_previous_run():
-            wrong_char = True
-            while wrong_char:
+            while True:
                 user_input = (
                     input(
                         "Info related to a previous run was found, would you like to resume? (y/n): "
@@ -41,14 +40,13 @@ def main(
                     .strip()
                     .lower()
                 )
-                if user_input in ["y", "n"]:
-                    wrong_char = False
+
+                if user_input in {"y", "n"}:
                     return user_input == "y"
 
-        if last_namespace != "default":
-            if prompt_user_resume_previous_run():
-                checkpoint.restore_last_namespace()
-                args.destination_folder = last_namespace
+        if last_namespace != "default" and prompt_user_resume_previous_run():
+            checkpoint.restore_last_namespace()
+            args.destination_folder = last_namespace
 
         if args.use_existing_framework and not args.destination_folder:
             raise ValueError(

@@ -78,15 +78,14 @@ class FrameworkGenerator:
             api_verbs = []
 
             for definition in merged_api_definition_list:
+                if not self._should_process_endpoint(definition["path"]):
+                    continue
                 if definition["type"] == "path":
                     api_paths.append(definition)
                 elif definition["type"] == "verb":
                     api_verbs.append(definition)
 
             for path in api_paths:
-                if not self._should_process_endpoint(path["path"]):
-                    continue
-
                 models = self._generate_models(path)
                 service_summary = self._generate_service_summary(models)
 
@@ -104,8 +103,6 @@ class FrameworkGenerator:
                 GenerationOptions.MODELS_AND_TESTS,
             ):
                 for verb in api_verbs:
-                    if not self._should_process_endpoint(verb["path"]):
-                        continue
                     self._generate_tests(
                         verb, all_generated_models_info, generate_tests
                     )

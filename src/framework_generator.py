@@ -24,7 +24,7 @@ class FrameworkGenerator:
         self.file_service = file_service
         self.swagger_processor = swagger_processor
         self.models_count = 0
-        self.tests_count = 0
+        self.test_files_count = 0
         self.logger = Logger.get_logger(__name__)
 
     def _log_error(self, message: str, exc: Exception):
@@ -111,7 +111,7 @@ class FrameworkGenerator:
                     )
 
             self.logger.info(
-                f"\nGeneration complete. {self.models_count} models and {self.tests_count} tests were generated."
+                f"\nGeneration complete. {self.models_count} models and {self.test_files_count} tests were generated."
             )
         except Exception as e:
             self._log_error("Error processing definitions", e)
@@ -154,8 +154,11 @@ class FrameworkGenerator:
             if models:
                 self.models_count += len(models)
                 self._run_code_quality_checks(models)
+            else:
+                self.logger.warning(f"No models generated for {api_definition['path']}")
             return models
         except Exception as e:
+
             self._log_error(
                 f"Error processing path definition for {api_definition['path']}", e
             )
@@ -205,7 +208,7 @@ class FrameworkGenerator:
                 api_verb["yaml"], relevant_models
             )
             if tests:
-                self.tests_count += 1
+                self.test_files_count += 1
                 self._run_code_quality_checks(tests)
                 if generate_tests == GenerationOptions.MODELS_AND_TESTS:
                     self._generate_additional_tests(
@@ -213,11 +216,16 @@ class FrameworkGenerator:
                         relevant_models,
                         api_verb,
                     )
+            else:
+                self.logger.warning(
+                    f"No tests generated for {api_verb['path']} - {api_verb['verb']}"
+                )
         except Exception as e:
             self._log_error(
                 f"Error processing verb definition for {api_verb['path']} - {api_verb['verb']}",
                 e,
             )
+
             raise
 
     def _generate_additional_tests(

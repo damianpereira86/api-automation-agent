@@ -53,14 +53,16 @@ class FileCreationTool(BaseTool):
 
         self.logger.debug(f"Received data['files']: {data.get('files', 'Not found')}")
 
+        if not isinstance(data, dict):
+            return {"files": []}
+
         if isinstance(data["files"], str):
-            try:
-                files_data = json_repair.loads(data["files"])
-            except json.JSONDecodeError as e:
-                self.logger.error(f"Error decoding JSON in 'files': {e}")
-                raise
+            files_data = json_repair.loads(data["files"])
         else:
             files_data = data["files"]
+
+        if not isinstance(files_data, list):
+            return {"files": []}
 
         # Filter out non-dictionary objects
         valid_files = [f for f in files_data if isinstance(f, dict)]

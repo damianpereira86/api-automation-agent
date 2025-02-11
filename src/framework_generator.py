@@ -1,6 +1,6 @@
 import signal
 import sys
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 from typing import List, Dict, Any
 
 from .ai_tools.models.file_spec import FileSpec
@@ -111,12 +111,11 @@ class FrameworkGenerator:
         """Process the API definitions and generate models and tests"""
         try:
             self.logger.info("\nProcessing API definitions")
+            all_generated_models_info = []
             api_paths = []
             api_verbs = []
 
             for definition in merged_api_definition_list:
-                if not self._should_process_endpoint(definition["path"]):
-                    continue
                 if not self._should_process_endpoint(definition["path"]):
                     continue
                 if definition["type"] == "path":
@@ -182,7 +181,9 @@ class FrameworkGenerator:
         return any(path.startswith(endpoint) for endpoint in self.config.endpoints)
 
     @Checkpoint.checkpoint("generate_models")
-    def _generate_models(self, api_paths: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    def _generate_models(
+        self, api_definition: Dict[str, Any]
+    ) -> Optional[List[Dict[str, Any]]]:
         """Process a path definition and generate models"""
         try:
             self.logger.info(f"\nGenerating models for path: {api_definition['path']}")
@@ -194,26 +195,10 @@ class FrameworkGenerator:
                 self.logger.warning(f"No models generated for {api_definition['path']}")
             return models
         except Exception as e:
-
             self._log_error(
                 f"Error processing path definition for {api_definition['path']}", e
             )
             raise
-
-            all_generated_models_info.append(
-                {
-                    "path": api_definition["path"],
-                    "summary": service_summary,
-                    "files": [model["path"] for model in models],
-                    "models": models,
-                }
-            )
-            self.checkpoint.save(
-                f"models_partial",
-                {"idx": idx, "all_generated_models_info": all_generated_models_info},
-                skip_object=True,
-            )
-        return all_generated_models_info
 
     def _generate_tests(
         self,

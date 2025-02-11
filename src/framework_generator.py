@@ -28,7 +28,7 @@ class FrameworkGenerator:
         self.file_service = file_service
         self.swagger_processor = swagger_processor
         self.models_count = 0
-        self.tests_count = 0
+        self.test_files_count = 0
         self.logger = Logger.get_logger(__name__)
         self.checkpoint = Checkpoint(
             self, "framework_generator", self.config.destination_folder
@@ -117,34 +117,37 @@ class FrameworkGenerator:
             for definition in merged_api_definition_list:
                 if not self._should_process_endpoint(definition["path"]):
                     continue
+                if not self._should_process_endpoint(definition["path"]):
+                    continue
                 if definition["type"] == "path":
                     api_paths.append(definition)
                 elif definition["type"] == "verb":
                     api_verbs.append(definition)
 
-            all_generated_models_info = self._generate_models(api_paths)
+            for path in api_paths:
+                models = self._generate_models(path)
+
+                all_generated_models_info.append(
+                    {
+                        "path": path["path"],
+                        "files": [
+                            model["path"] + " - " + model["summary"] for model in models
+                        ],
+                        "models": models,
+                    }
+                )
+
             if generate_tests in (
                 GenerationOptions.MODELS_AND_FIRST_TEST,
                 GenerationOptions.MODELS_AND_TESTS,
             ):
-                if not self.checkpoint.restore("tests_generated"):
-                    state = self.checkpoint.restore("test_partial")
-                    last_idx = state["idx"] if state else 0
-                    for idx, verb in enumerate(api_verbs):
-                        if idx <= last_idx:
-                            continue
-                        self._generate_tests(
-                            verb, all_generated_models_info, generate_tests
-                        )
-                        self.checkpoint.save(f"tests_generated", {"idx": idx}, False)
-                    self.checkpoint.save("tests_generated", state={}, skip_object=False)
-                else:
-                    self.logger.info(
-                        "✅ Tests already generated. Skipping test generation."
+                for verb in api_verbs:
+                    self._generate_tests(
+                        verb, all_generated_models_info, generate_tests
                     )
 
             self.logger.info(
-                f"\nGeneration complete. {self.models_count} models and {self.tests_count} tests were generated."
+                f"\nGeneration complete. {self.models_count} models and {self.test_files_count} tests were generated."
             )
         except Exception as e:
             self._log_error("Error processing definitions", e)
@@ -154,52 +157,48 @@ class FrameworkGenerator:
     def run_final_checks(self, generate_tests: GenerationOptions):
         """Run final checks like TypeScript compilation and tests"""
         try:
-            result = self.command_service.run_typescript_compiler()
-            success, _ = result
+            test_files = self.command_service.get_generated_test_files()
 
-            if success and generate_tests in (
+            if generate_tests in (
                 GenerationOptions.MODELS_AND_FIRST_TEST,
                 GenerationOptions.MODELS_AND_TESTS,
             ):
-                self.command_service.run_tests()
+                if not test_files:
+                    self.logger.warning("⚠️ No test files found! Skipping tests.")
+                else:
+                    self.command_service.run_specific_tests_excluding_errors(test_files)
 
             self.logger.info("Final checks completed")
+
         except Exception as e:
             self._log_error("Error during final checks", e)
             raise
 
     def _should_process_endpoint(self, path: str) -> bool:
         """Check if an endpoint should be processed based on configuration"""
-        return self.config.endpoint is None or path.startswith(self.config.endpoint)
+        if self.config.endpoints is None:
+            return True
+
+        return any(path.startswith(endpoint) for endpoint in self.config.endpoints)
 
     @Checkpoint.checkpoint("generate_models")
     def _generate_models(self, api_paths: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         """Process a path definition and generate models"""
-        all_generated_models_info = []
-        state = self.checkpoint.restore("models_partial")
-        last_idx = 0
-        if state:
-            all_generated_models_info = state["all_generated_models_info"]
-            last_idx = state["idx"]
+        try:
+            self.logger.info(f"\nGenerating models for path: {api_definition['path']}")
+            models = self.llm_service.generate_models(api_definition["yaml"])
+            if models:
+                self.models_count += len(models)
+                self._run_code_quality_checks(models, are_models=True)
+            else:
+                self.logger.warning(f"No models generated for {api_definition['path']}")
+            return models
+        except Exception as e:
 
-        for idx, api_definition in enumerate(api_paths):
-            if idx <= last_idx:
-                continue
-            try:
-                self.logger.info(
-                    f"\nGenerating models for path: {api_definition['path']}"
-                )
-                models = self.llm_service.generate_models(api_definition["yaml"])
-                if models:
-                    self.models_count += len(models)
-                    self._run_code_quality_checks(models)
-                    self.save_state()
-                service_summary = self._generate_service_summary(models)
-            except Exception as e:
-                self._log_error(
-                    f"Error processing path definition for {api_definition['path']}", e
-                )
-                raise
+            self._log_error(
+                f"Error processing path definition for {api_definition['path']}", e
+            )
+            raise
 
             all_generated_models_info.append(
                 {
@@ -235,7 +234,6 @@ class FrameworkGenerator:
                     other_models.append(
                         {
                             "path": model["path"],
-                            "summary": model["summary"],
                             "files": model["files"],
                         }
                     )
@@ -260,7 +258,7 @@ class FrameworkGenerator:
                 api_verb["yaml"], relevant_models
             )
             if tests:
-                self.tests_count += 1
+                self.test_files_count += 1
                 self.save_state()
                 self._run_code_quality_checks(tests)
                 if generate_tests == GenerationOptions.MODELS_AND_TESTS:
@@ -269,11 +267,16 @@ class FrameworkGenerator:
                         relevant_models,
                         api_verb,
                     )
+            else:
+                self.logger.warning(
+                    f"No tests generated for {api_verb['path']} - {api_verb['verb']}"
+                )
         except Exception as e:
             self._log_error(
                 f"Error processing verb definition for {api_verb['path']} - {api_verb['verb']}",
                 e,
             )
+
             raise
 
     def _generate_additional_tests(
@@ -301,12 +304,14 @@ class FrameworkGenerator:
             )
             raise
 
-    def _run_code_quality_checks(self, files: List[Dict[str, Any]]):
+    def _run_code_quality_checks(
+        self, files: List[Dict[str, Any]], are_models: bool = False
+    ):
         """Run code quality checks including TypeScript compilation, linting, and formatting"""
         try:
 
             def typescript_fix_wrapper(problematic_files, messages):
-                self.llm_service.fix_typescript(problematic_files, messages)
+                self.llm_service.fix_typescript(problematic_files, messages, are_models)
 
             self.command_service.run_command_with_fix(
                 self.command_service.run_typescript_compiler_for_files,
@@ -317,15 +322,4 @@ class FrameworkGenerator:
             self.command_service.run_linter()
         except Exception as e:
             self._log_error("Error during code quality checks", e)
-            raise
-
-    def _generate_service_summary(self, models: List[Dict[str, Any]]):
-        """Generate a summary of a service"""
-        self.logger.info(f"\nGenerating service summary for...")
-        try:
-            summary = self.llm_service.generate_service_summary(models)
-            self.logger.info(f"Service summary: {summary}")
-            return summary
-        except Exception as e:
-            self._log_error("Error during summary generation", e)
             raise

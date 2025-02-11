@@ -58,7 +58,7 @@ def main(
                 "api_file_path": args.api_file_path,
                 "destination_folder": args.destination_folder
                 or config.destination_folder,
-                "endpoint": args.endpoint,
+                "endpoints": args.endpoints,
                 "generate": GenerationOptions(args.generate),
                 "use_existing_framework": args.use_existing_framework,
             }
@@ -67,7 +67,9 @@ def main(
         logger.info(f"\nAPI file path: {config.api_file_path}")
         logger.info(f"Destination folder: {config.destination_folder}")
         logger.info(f"Use existing framework: {config.use_existing_framework}")
-        logger.info(f"Endpoint: {config.endpoint}")
+        logger.info(
+            f"Endpoints: {', '.join(config.endpoints) if config.endpoints else 'All'}"
+        )
         logger.info(f"Generate: {config.generate}")
         logger.info(f"Model: {config.model}")
 

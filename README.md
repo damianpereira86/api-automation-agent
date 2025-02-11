@@ -78,7 +78,7 @@ python ./main.py path/to/your/openapi.yaml
 
 - `--destination-folder`: Specify output directory (default: ./generated-framework_[timestamp])
 - `--use-existing-framework`: Use an existing framework instead of creating a new one
-- `--endpoint`: Generate framework for a specific endpoint only
+- `--endpoints`: Generate framework for specific endpoints (can specify multiple)
 - `--generate`: Specify what to generate (default: models_and_tests)
   - `models`: Generate only the data models
   - `models_and_first_test`: Generate data models and the first test for each endpoint
@@ -92,8 +92,8 @@ python ./main.py api-spec.yaml --destination-folder ./my-api-framework
 ```
 
 ```bash
-# Generate models and tests for a specific endpoint using an existing framework
-python ./main.py api-spec.yaml --use-existing-framework --destination-folder ./my-api-framework --endpoint /user
+# Generate models and tests for specific endpoints using an existing framework
+python ./main.py api-spec.yaml --use-existing-framework --destination-folder ./my-api-framework --endpoints /user /store
 ```
 
 ```bash
@@ -107,8 +107,8 @@ python ./main.py api-spec.yaml --generate models_and_first_test --destination-fo
 ```
 
 ```bash
-# Combine options to generate specific endpoint with first test only
-python ./main.py api-spec.yaml --endpoint /pet --generate models_and_first_test
+# Combine options to generate specific endpoints with first test only
+python ./main.py api-spec.yaml --endpoints /store --generate models_and_first_test
 ```
 
 The generated framework will follow the structure:
@@ -125,23 +125,21 @@ generated-framework_[timestamp]/    # Or the Destination Folder selected
 
 ## Testing the Agent
 
-To try out the agent without using your own API specification, you can use the sample API definitions provided in the `api-definitions` folder. They are derived from the Pet Store API described in https://petstore.swagger.io/#/
+To try out the agent without using your own API specification, you can use the sample API definition provided in the `api-definitions` folder. They are derived from the Pet Store API described in https://petstore.swagger.io/#/
 
-1. Start with the Store endpoints (recommended for testing and debugging because of its size):
+1. Start with the `petstore-swagger-store.json` definition and the Store endpoints (recommended for testing and debugging because of its size):
 ```bash
-python ./main.py api-definitions/petstore-swagger-store.json
+python ./main.py api-definitions/petstore-swagger-store.json --endpoints /store
 ```
 
 This is a simple and small API specification that includes basic CRUD operations and is ideal for testing the agent's capabilities.  
 
 Estimated cost to run Store example: US$ ~0.1
 
-Other available test specifications:
-- `api-definitions/petstore-swagger-user.json` User endpoints
-- `api-definitions/petstore-swagger-reduced.json` User and Store endpoints
-- `api-definitions/petstore-swagger.json` Complete Pet Store API
-
-Each specification varies in complexity and will generate different amounts of code and tests, affecting the total cost of execution.
+You can combine endpoints to test larger scenarios.:
+```bash
+python ./main.py api-definitions/petstore-swagger-store.json --endpoints /store /pet
+```
 
 ## Contributing
 
@@ -194,19 +192,32 @@ black .
 
 The project implements a dual logging strategy:
 
-1. **Console Output**: User-friendly, simplified format showing only the message content
+1. **Console Output**: By default shows INFO level messages in a user-friendly format
     ```
     Generated service class for Pet endpoints
     Creating test suite for /pet/findByStatus
     ```
 
-2. **File Logging**: Detailed logging with timestamps and metadata in `logs/[framework-name].log`
+2. **File Logging**: Detailed DEBUG level logging with timestamps and metadata in `logs/[framework-name].log`
     ```
+    2024-03-21 14:30:22,531 - generator.services - DEBUG - Initializing service class generator for Pet endpoints
     2024-03-21 14:30:22,531 - generator.services - INFO - Generated service class for Pet endpoints
+    2024-03-21 14:30:23,128 - generator.tests - DEBUG - Loading OpenAPI spec for /pet/findByStatus
     2024-03-21 14:30:23,128 - generator.tests - INFO - Creating test suite for /pet/findByStatus
     ```
 
-The log level can be controlled through the debug flag, with DEBUG level providing more verbose output for troubleshooting.
+### Debug Options
+
+You can control debug levels through environment variables:
+
+1. **Application Debug**: Set `DEBUG=True` in your `.env` file to enable debug-level logging in the console output
+2. **LangChain Debug**: Set `LANGCHAIN_DEBUG=True` to enable detailed logging of LangChain operations
+
+Example `.env` configuration:
+```env
+DEBUG=False          # Default: False (INFO level console output)
+LANGCHAIN_DEBUG=False  # Default: False (disabled)
+```
 
 ## License
 

@@ -3,15 +3,7 @@
     "info": {
         "description": "This is a sample server Petstore server.  You can find out more about Swagger at [http://swagger.io](http://swagger.io) or on [irc.freenode.net, #swagger](http://swagger.io/irc/).  For this sample, you can use the api key `special-key` to test the authorization filters.",
         "version": "1.0.7",
-        "title": "Swagger Petstore",
-        "termsOfService": "http://swagger.io/terms/",
-        "contact": {
-            "email": "apiteam@swagger.io"
-        },
-        "license": {
-            "name": "Apache 2.0",
-            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
-        }
+        "title": "Swagger Petstore"
     },
     "host": "petstore.swagger.io",
     "basePath": "/v2",
@@ -27,14 +19,6 @@
         {
             "name": "store",
             "description": "Access to Petstore orders"
-        },
-        {
-            "name": "user",
-            "description": "Operations about user",
-            "externalDocs": {
-                "description": "Find out more about our store",
-                "url": "http://swagger.io"
-            }
         }
     ],
     "schemes": [
@@ -42,33 +26,91 @@
         "http"
     ],
     "paths": {
-        "/store/inventory": {
-            "get": {
+        "/pet": {
+            "post": {
                 "tags": [
-                    "store"
+                    "pet"
                 ],
-                "summary": "Returns pet inventories by status",
-                "description": "Returns a map of status codes to quantities",
-                "operationId": "getInventory",
+                "summary": "Add a new pet to the store",
+                "description": "",
+                "operationId": "addPet",
+                "consumes": [
+                    "application/json",
+                    "application/xml"
+                ],
                 "produces": [
-                    "application/json"
+                    "application/json",
+                    "application/xml"
                 ],
-                "parameters": [],
-                "responses": {
-                    "200": {
-                        "description": "successful operation",
+                "parameters": [
+                    {
+                        "in": "body",
+                        "name": "body",
+                        "description": "Pet object that needs to be added to the store",
+                        "required": true,
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": {
-                                "type": "integer",
-                                "format": "int32"
-                            }
+                            "$ref": "#/definitions/Pet"
                         }
+                    }
+                ],
+                "responses": {
+                    "405": {
+                        "description": "Invalid input"
                     }
                 },
                 "security": [
                     {
-                        "api_key": []
+                        "petstore_auth": [
+                            "write:pets",
+                            "read:pets"
+                        ]
+                    }
+                ]
+            }
+        },
+        "/pet/{petId}": {
+            "delete": {
+                "tags": [
+                    "pet"
+
+                ],
+                "summary": "Deletes a pet",
+                "description": "",
+                "operationId": "deletePet",
+                "produces": [
+                    "application/json",
+                    "application/xml"
+                ],
+                "parameters": [
+                    {
+                        "name": "api_key",
+                        "in": "header",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "petId",
+                        "in": "path",
+                        "description": "Pet id to delete",
+                        "required": true,
+                        "type": "integer",
+                        "format": "int64"
+                    }
+                ],
+                "responses": {
+                    "400": {
+                        "description": "Invalid ID supplied"
+                    },
+                    "404": {
+                        "description": "Pet not found"
+                    }
+                },
+                "security": [
+                    {
+                        "petstore_auth": [
+                            "write:pets",
+                            "read:pets"
+                        ]
                     }
                 ]
             }
@@ -337,45 +379,6 @@
             "xml": {
                 "name": "Order"
             }
-        },
-        "User": {
-            "type": "object",
-            "properties": {
-                "id": {
-                    "type": "integer",
-                    "format": "int64"
-                },
-                "username": {
-                    "type": "string"
-                },
-                "firstName": {
-                    "type": "string"
-                },
-                "lastName": {
-                    "type": "string"
-                },
-                "email": {
-                    "type": "string"
-                },
-                "password": {
-                    "type": "string"
-                },
-                "phone": {
-                    "type": "string"
-                },
-                "userStatus": {
-                    "type": "integer",
-                    "format": "int32",
-                    "description": "User Status"
-                }
-            },
-            "xml": {
-                "name": "User"
-            }
         }
-    },
-    "externalDocs": {
-        "description": "Find out more about Swagger",
-        "url": "http://swagger.io"
     }
 }

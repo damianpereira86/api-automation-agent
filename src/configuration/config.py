@@ -1,6 +1,6 @@
 from enum import Enum
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Optional, List
 
 from .models import Model
 
@@ -20,13 +20,14 @@ class GenerationOptions(Enum):
 class Config:
     env: Envs = Envs.DEV
     debug: bool = False
+    langchain_debug: bool = False
     model: Model = Model.CLAUDE_SONNET
     generate: GenerationOptions = GenerationOptions.MODELS_AND_TESTS
     anthropic_api_key: str = ""
     openai_api_key: str = ""
     api_file_path: str = ""
     destination_folder: str = ""
-    endpoint: str = ""
+    endpoints: Optional[List[str]] = None
     use_existing_framework: bool = False
 
     def update(self, updates: dict[str, Any]):

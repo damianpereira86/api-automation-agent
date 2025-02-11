@@ -86,4 +86,7 @@ class FileCreationTool(BaseTool):
         # Use appropriate spec class based on are_models
         spec_class = ModelFileSpec if self.are_models else FileSpec
         file_specs = [spec_class(**file_spec) for file_spec in valid_files]
+        for file_spec in file_specs:
+            if file_spec.path.startswith("/"):
+                file_spec.path = f".{file_spec.path}"
         return {"files": file_specs}

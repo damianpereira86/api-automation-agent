@@ -35,7 +35,6 @@ class FileCreationTool(BaseTool):
         self.logger = Logger.get_logger(__name__)
         self.are_models = are_models
 
-        # Set the appropriate schema and name based on are_models
         if are_models:
             self.args_schema = ModelCreationInput
             self.name = "create_models"
@@ -83,7 +82,6 @@ class FileCreationTool(BaseTool):
                 f"Filtered out {len(files_data) - len(valid_files)} invalid file specifications"
             )
 
-        # Use appropriate spec class based on are_models
         spec_class = ModelFileSpec if self.are_models else FileSpec
         file_specs = [spec_class(**file_spec) for file_spec in valid_files]
         for file_spec in file_specs:

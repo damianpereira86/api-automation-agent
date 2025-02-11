@@ -1,9 +1,9 @@
 import inspect
 import os
 import shelve
+import dbm
 from functools import wraps
-from typing import Dict, Any, Optional
-
+from typing import Dict, Any, Optional, Iterable, Generator
 from src.utils.logger import Logger
 
 
@@ -20,39 +20,54 @@ class Checkpoint:
             self._setup_default_save_state()
 
     def _default_save_state(self):
-        """
-        Declaring save_state() on the parent will override this default pass
-        """
+        """Default placeholder for save_state if not implemented."""
         pass
 
     def _setup_default_save_state(self):
-        """
-        Dynamically add a default save_state function to the object instantiating Checkpoint
-        Needed for saving state when exceptions arise
-        """
+        """Attach a default save_state method to the object if missing."""
         setattr(self.obj, "save_state", self._default_save_state)
 
-    def _get_checkpoint_key(self, tag=None):
-        """Consistently generate the same key for the given object or tag."""
+    def _get_checkpoint_key(self, tag=None) -> str:
+        """Generate a consistent key based on the namespace and tag."""
         return f"{self.namespace}_{tag or self.tag}"
 
+    def _get_shelve_file_path(self) -> Optional[str]:
+        """Find the correct shelve file based on the system."""
+        for ext in ["", ".db", ".dat", ".dir", ".bak"]:
+            file_path = f"{self.DB_NAME}{ext}"
+            if os.path.exists(file_path):
+                return file_path
+        return None
+
+    def _shelve_exists(self) -> bool:
+        """Check if a shelve database exists using dbm."""
+        try:
+            with dbm.open(self.DB_NAME, "r"):
+                return True
+        except dbm.error:
+            return False
+
     def save_last_namespace(self):
-        """Save the last namespace in the shelve database."""
+        """Save the last used namespace to the shelve database."""
         with shelve.open(self.DB_NAME, writeback=True) as db:
             db["last_namespace"] = self.namespace
 
     def restore_last_namespace(self):
         """Restore the last used namespace from the database."""
+        if not self._shelve_exists():
+            return
         with shelve.open(self.DB_NAME) as db:
             self.namespace = db.get("last_namespace", "default")
             self.logger.info(f"🔄 Restored last namespace: {self.namespace}")
 
-    def get_last_namespace(self):
+    def get_last_namespace(self) -> str:
         """Retrieve the last saved namespace."""
+        if not self._shelve_exists():
+            return "default"
         with shelve.open(self.DB_NAME) as db:
             return db.get("last_namespace", "default")
 
-    def save(self, tag: str = None, state: Any = None, skip_object=False):
+    def save(self, tag: str = None, state: Any = None, skip_object=True):
         """Save function state and optionally object state."""
         frame = inspect.currentframe().f_back
         local_vars = frame.f_locals
@@ -70,15 +85,15 @@ class Checkpoint:
         self.logger.info(f"✅ Checkpoint '{key}' saved.")
 
     def restore(self, tag=None, restore_object=False) -> Optional[Dict[str, Any]]:
-        """Restore function and optionally object state."""
-        if not os.path.exists(f"{self.DB_NAME}.db"):
+        """Restore function state and optionally object state."""
+        if not self._shelve_exists():
             return None
 
         tag = tag or self.tag
         key = self._get_checkpoint_key(tag)
 
         with shelve.open(self.DB_NAME) as db:
-            saved_data = db.get(key, None)
+            saved_data = db.get(key)
             if not saved_data:
                 return None
 
@@ -93,12 +108,53 @@ class Checkpoint:
             }
             return function_state
 
+    def checkpoint_iter(
+        self, iterable: Iterable, tag: str, extra_state: Dict[str, Any] = None
+    ) -> Generator:
+        """
+        Wraps a for-loop to automatically save and restore progress.
+
+        Args:
+            iterable (Iterable): The list or generator to iterate over.
+            tag (str): Unique identifier for saving progress.
+            extra_state (Dict[str, Any], optional): Additional state variables to track.
+
+        Returns:
+            Generator: Yields only unprocessed items.
+        """
+        state = self.restore(tag) or {"processed": [], "extra_state": {}}
+
+        processed = state.get("processed", [])
+        saved_extra_state = state.get("extra_state", {})
+
+        # Restore extra_state if provided
+        if extra_state is not None:
+            extra_state.update(saved_extra_state)
+
+        remaining_items = [item for item in iterable if item not in processed]
+
+        for item in remaining_items:
+            yield item
+
+            # Mark as processed
+            processed.append(item)
+
+            # Update state and save
+            new_state = {"processed": processed, "extra_state": extra_state or {}}
+            self.save(tag, new_state)
+
     @staticmethod
     def clear():
-        """Clear all stored checkpoints."""
-        if os.path.exists(f"{Checkpoint.DB_NAME}"):
-            os.remove(f"{Checkpoint.DB_NAME}")
-            Logger.get_logger(__name__).info("🗑️ Checkpoints cleared.")
+        """Clear all stored checkpoints by removing shelve files."""
+        try:
+            if dbm.whichdb(Checkpoint.DB_NAME):
+                for ext in ["", ".db", ".dat", ".dir", ".bak"]:
+                    file_path = f"{Checkpoint.DB_NAME}{ext}"
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                Logger.get_logger(__name__).info("🗑️ Checkpoints cleared.")
+        except Exception as e:
+            Logger.get_logger(__name__).error(f"❌ Error clearing checkpoints: {e}")
 
     @staticmethod
     def checkpoint(tag=None):
@@ -116,9 +172,7 @@ class Checkpoint:
 
                 try:
                     result = func(self, *args, **kwargs)
-                    checkpoint.save(
-                        tag=checkpoint_tag, state={"result": result}, skip_object=True
-                    )
+                    checkpoint.save(tag=checkpoint_tag, state={"result": result})
                     return result
                 except Exception as e:
                     self.save_state()

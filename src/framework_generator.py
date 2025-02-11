@@ -53,9 +53,8 @@ class FrameworkGenerator:
             state={
                 "destination_folder": self.config.destination_folder,
                 "models_count": self.models_count,
-                "tests_count": self.tests_count,
-            },
-            skip_object=True,
+                "test_files_count": self.test_files_count,
+            }
         )
 
     def restore_state(self, namespace: str):
@@ -63,7 +62,7 @@ class FrameworkGenerator:
         state = self.checkpoint.restore()
         if state:
             self.models_count = state.get("models_count", 0)
-            self.tests_count = state.get("tests_count", 0)
+            self.test_files_count = state.get("test_files_count", 0)
             self.logger.info("🔄 Restored checkpoint state.")
 
     @Checkpoint.checkpoint()
@@ -103,6 +102,7 @@ class FrameworkGenerator:
             self._log_error("Error creating .env file", e)
             raise
 
+    @Checkpoint.checkpoint()
     def generate(
         self,
         merged_api_definition_list: List[Dict[str, Any]],
@@ -111,7 +111,7 @@ class FrameworkGenerator:
         """Process the API definitions and generate models and tests"""
         try:
             self.logger.info("\nProcessing API definitions")
-            all_generated_models_info = []
+            all_generated_models = {"info": []}
             api_paths = []
             api_verbs = []
 
@@ -123,10 +123,11 @@ class FrameworkGenerator:
                 elif definition["type"] == "verb":
                     api_verbs.append(definition)
 
-            for path in api_paths:
+            for path in self.checkpoint.checkpoint_iter(
+                api_paths, "generate_paths", all_generated_models
+            ):
                 models = self._generate_models(path)
-
-                all_generated_models_info.append(
+                all_generated_models["info"].append(
                     {
                         "path": path["path"],
                         "files": [
@@ -140,9 +141,11 @@ class FrameworkGenerator:
                 GenerationOptions.MODELS_AND_FIRST_TEST,
                 GenerationOptions.MODELS_AND_TESTS,
             ):
-                for verb in api_verbs:
+                for verb in self.checkpoint.checkpoint_iter(
+                    api_verbs, "generate_verbs"
+                ):
                     self._generate_tests(
-                        verb, all_generated_models_info, generate_tests
+                        verb, all_generated_models["info"], generate_tests
                     )
 
             self.logger.info(
@@ -150,6 +153,7 @@ class FrameworkGenerator:
             )
         except Exception as e:
             self._log_error("Error processing definitions", e)
+            self.save_state()
             raise
 
     @Checkpoint.checkpoint()

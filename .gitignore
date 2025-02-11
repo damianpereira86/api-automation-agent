@@ -65,6 +65,7 @@ target/
 /.idea
 
 # Framework results
+checkpoints
 /generated/*
 /logs/*
 checkpoints.db

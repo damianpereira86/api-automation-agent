@@ -16,6 +16,23 @@ class Checkpoint:
         self.namespace = namespace or "default"
         self.logger = Logger.get_logger(__name__)
 
+        if self.obj and not hasattr(self.obj, "save_state"):
+            self._setup_default_save_state()
+
+    def _default_save_state(self):
+        """
+        Save obj and function vars as default save behavior
+        Declaring save_state() on the parent will override this default
+        """
+        self.save()
+
+    def _setup_default_save_state(self):
+        """
+        Dynamically add a default save_state function to the object instantiating Checkpoint
+        Needed for saving state when exceptions arise
+        """
+        setattr(self.obj, "save_state", self._default_save_state)
+
     def _get_checkpoint_key(self, tag=None):
         """Consistently generate the same key for the given object or tag."""
         return f"{self.namespace}_{tag or self.tag}"

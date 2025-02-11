@@ -40,7 +40,6 @@ class LLMService:
         self,
         config: Config,
         file_service: FileService,
-        tools: Optional[List[BaseTool]] = None,
     ):
         """
         Initialize LLM Service.
@@ -52,7 +51,6 @@ class LLMService:
         self.config = config
         self.file_service = file_service
         self.logger = Logger.get_logger(__name__)
-        self.tools = tools or [FileCreationTool(config, file_service)]
 
     def _select_language_model(
         self, language_model: Optional[Model] = None, override: bool = False
@@ -108,7 +106,7 @@ class LLMService:
     def create_ai_chain(
         self,
         prompt_path: str,
-        additional_tools: Optional[List[BaseTool]] = None,
+        tools: Optional[List[BaseTool]] = None,
         tool_to_use: Optional[str] = None,
         language_model: Optional[Model] = None,
     ) -> Any:
@@ -117,7 +115,7 @@ class LLMService:
 
         Args:
             prompt_path (str): Path to the prompt template
-            additional_tools (Optional[List[BaseTool]]): Additional tools to bind
+            tools (Optional[List[BaseTool]]): Tools to bind
             tool_to_use (Optional[str]): Name of the tool to use
             language_model (Optional[BaseLanguageModel]): Language model to use
 
@@ -125,7 +123,7 @@ class LLMService:
             Configured AI processing chain
         """
         try:
-            all_tools = self.tools + (additional_tools or [])
+            all_tools = tools or []
 
             llm = self._select_language_model(language_model)
             prompt_template = ChatPromptTemplate.from_template(
@@ -162,17 +160,21 @@ class LLMService:
     def generate_dot_env(self, api_definition: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate .env file configuration."""
         return json.loads(
-            self.create_ai_chain(PromptConfig.DOT_ENV).invoke(
-                {"api_definition": api_definition}
-            )
+            self.create_ai_chain(
+                PromptConfig.DOT_ENV,
+                tools=[FileCreationTool(self.config, self.file_service)],
+            ).invoke({"api_definition": api_definition})
         )
 
     def generate_models(self, api_definition: Dict[str, Any]) -> List[Dict[str, Any]]:
         """Generate models from API definition."""
         return json.loads(
-            self.create_ai_chain(PromptConfig.MODELS).invoke(
-                {"api_definition": api_definition}
-            )
+            self.create_ai_chain(
+                PromptConfig.MODELS,
+                tools=[
+                    FileCreationTool(self.config, self.file_service, are_models=True)
+                ],
+            ).invoke({"api_definition": api_definition})
         )
 
     def generate_first_test(
@@ -180,16 +182,11 @@ class LLMService:
     ) -> List[Dict[str, Any]]:
         """Generate first test from API definition and models."""
         return json.loads(
-            self.create_ai_chain(PromptConfig.FIRST_TEST).invoke(
-                {"api_definition": api_definition, "models": models}
-            )
+            self.create_ai_chain(
+                PromptConfig.FIRST_TEST,
+                tools=[FileCreationTool(self.config, self.file_service)],
+            ).invoke({"api_definition": api_definition, "models": models})
         )
-
-    def generate_service_summary(self, models: List[Dict[str, Any]]):
-        """Generate a summary for a given service model"""
-        return self.create_ai_chain(
-            PromptConfig.SUMMARY, language_model=Model.CLAUDE_HAIKU
-        ).invoke({"models": models})
 
     def get_additional_models(
         self,
@@ -200,8 +197,7 @@ class LLMService:
         self.logger.info(f"\nGetting additional models...")
         return self.create_ai_chain(
             PromptConfig.ADD_INFO,
-            [FileReadingTool(self.config, self.file_service)],
-            "read_files",
+            tools=[FileReadingTool(self.config, self.file_service)],
         ).invoke(
             {
                 "relevant_models": relevant_models,
@@ -217,7 +213,10 @@ class LLMService:
     ) -> List[Dict[str, Any]]:
         """Generate additional tests from tests, models and an API definition."""
         return json.loads(
-            self.create_ai_chain(PromptConfig.ADDITIONAL_TESTS).invoke(
+            self.create_ai_chain(
+                PromptConfig.ADDITIONAL_TESTS,
+                tools=[FileCreationTool(self.config, self.file_service)],
+            ).invoke(
                 {
                     "tests": tests,
                     "models": models,
@@ -226,7 +225,9 @@ class LLMService:
             )
         )
 
-    def fix_typescript(self, files: List[Dict[str, str]], messages: List[str]) -> None:
+    def fix_typescript(
+        self, files: List[Dict[str, str]], messages: List[str], are_models: bool = False
+    ) -> None:
         """
         Fix TypeScript files.
 
@@ -238,6 +239,9 @@ class LLMService:
         for file in files:
             self.logger.info(f"  - {file['path']}")
 
-        self.create_ai_chain(PromptConfig.FIX_TYPESCRIPT).invoke(
-            {"files": files, "messages": messages}
-        )
+        self.create_ai_chain(
+            PromptConfig.FIX_TYPESCRIPT,
+            tools=[
+                FileCreationTool(self.config, self.file_service, are_models=are_models)
+            ],
+        ).invoke({"files": files, "messages": messages})

@@ -87,13 +87,13 @@ class FrameworkGenerator:
 
             for path in api_paths:
                 models = self._generate_models(path)
-                service_summary = self._generate_service_summary(models)
 
                 all_generated_models_info.append(
                     {
                         "path": path["path"],
-                        "summary": service_summary,
-                        "files": [model["path"] for model in models],
+                        "files": [
+                            model["path"] + " - " + model["summary"] for model in models
+                        ],
                         "models": models,
                     }
                 )
@@ -150,7 +150,7 @@ class FrameworkGenerator:
             models = self.llm_service.generate_models(api_definition["yaml"])
             if models:
                 self.models_count += len(models)
-                self._run_code_quality_checks(models)
+                self._run_code_quality_checks(models, are_models=True)
             else:
                 self.logger.warning(f"No models generated for {api_definition['path']}")
             return models
@@ -180,7 +180,6 @@ class FrameworkGenerator:
                     other_models.append(
                         {
                             "path": model["path"],
-                            "summary": model["summary"],
                             "files": model["files"],
                         }
                     )
@@ -248,12 +247,14 @@ class FrameworkGenerator:
             )
             raise
 
-    def _run_code_quality_checks(self, files: List[Dict[str, Any]]):
+    def _run_code_quality_checks(
+        self, files: List[Dict[str, Any]], are_models: bool = False
+    ):
         """Run code quality checks including TypeScript compilation, linting, and formatting"""
         try:
 
             def typescript_fix_wrapper(problematic_files, messages):
-                self.llm_service.fix_typescript(problematic_files, messages)
+                self.llm_service.fix_typescript(problematic_files, messages, are_models)
 
             self.command_service.run_command_with_fix(
                 self.command_service.run_typescript_compiler_for_files,
@@ -264,15 +265,4 @@ class FrameworkGenerator:
             self.command_service.run_linter()
         except Exception as e:
             self._log_error("Error during code quality checks", e)
-            raise
-
-    def _generate_service_summary(self, models: List[Dict[str, Any]]):
-        """Generate a summary of a service"""
-        self.logger.info(f"\nGenerating service summary for...")
-        try:
-            summary = self.llm_service.generate_service_summary(models)
-            self.logger.info(f"Service summary: {summary}")
-            return summary
-        except Exception as e:
-            self._log_error("Error during summary generation", e)
             raise

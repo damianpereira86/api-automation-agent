@@ -12,6 +12,9 @@ class ModelFileSpec(FileSpec):
         )
     )
 
-
-def to_json(self):
-    return {"path": self.path, "fileContent": self.fileContent, "summary": self.summary}
+    def to_json(self):
+        return {
+            "path": self.path,
+            "fileContent": self.fileContent,
+            "summary": self.summary,
+        }

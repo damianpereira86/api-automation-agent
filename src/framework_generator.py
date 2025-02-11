@@ -1,7 +1,6 @@
 import signal
 import sys
 from typing import List, Dict, Any, Optional
-from typing import List, Dict, Any
 
 from .ai_tools.models.file_spec import FileSpec
 from .configuration.config import Config, GenerationOptions
@@ -136,6 +135,7 @@ class FrameworkGenerator:
                         "models": models,
                     }
                 )
+                self.logger.debug("Generated models for path: " + path["path"])
 
             if generate_tests in (
                 GenerationOptions.MODELS_AND_FIRST_TEST,
@@ -146,6 +146,9 @@ class FrameworkGenerator:
                 ):
                     self._generate_tests(
                         verb, all_generated_models["info"], generate_tests
+                    )
+                    self.logger.debug(
+                        f"Generated tests for path: {verb['path']} - {verb['verb']}"
                     )
 
             self.logger.info(
@@ -283,7 +286,6 @@ class FrameworkGenerator:
                 tests, models, api_definition["yaml"]
             )
             if additional_tests:
-                self.tests_count += 1
                 self.save_state()
                 self._run_code_quality_checks(additional_tests)
         except Exception as e:

@@ -82,7 +82,7 @@ class Checkpoint:
             db[key] = state
             db.sync()
 
-        self.logger.info(f"✅ Checkpoint '{key}' saved.")
+        self.logger.debug(f"✅ Checkpoint '{tag or key}' saved.")
 
     def restore(self, tag=None, restore_object=False) -> Optional[Dict[str, Any]]:
         """Restore function state and optionally object state."""
@@ -132,6 +132,16 @@ class Checkpoint:
             extra_state.update(saved_extra_state)
 
         remaining_items = [item for item in iterable if item not in processed]
+        if not remaining_items:
+            self.logger.info(f"✅ Checkpoint '{tag}' already processed.")
+            return
+
+        if len(processed) == 0:
+            self.logger.debug(f"🔄 Starting checkpoint '{tag}' from the beginning.")
+        else:
+            self.logger.debug(
+                f"🔄 Already processed {len(processed)} items, resuming checkpoint '{tag}'."
+            )
 
         for item in remaining_items:
             yield item
@@ -152,7 +162,7 @@ class Checkpoint:
                     file_path = f"{Checkpoint.DB_NAME}{ext}"
                     if os.path.exists(file_path):
                         os.remove(file_path)
-                Logger.get_logger(__name__).info("🗑️ Checkpoints cleared.")
+                Logger.get_logger(__name__).debug("🗑️ Checkpoints cleared.")
         except Exception as e:
             Logger.get_logger(__name__).error(f"❌ Error clearing checkpoints: {e}")
 

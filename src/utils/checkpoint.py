@@ -21,10 +21,9 @@ class Checkpoint:
 
     def _default_save_state(self):
         """
-        Save obj and function vars as default save behavior
-        Declaring save_state() on the parent will override this default
+        Declaring save_state() on the parent will override this default pass
         """
-        self.save()
+        pass
 
     def _setup_default_save_state(self):
         """

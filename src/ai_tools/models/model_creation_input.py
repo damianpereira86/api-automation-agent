@@ -11,12 +11,12 @@ class ModelCreationInput(BaseModel):
         examples=[
             [
                 {
-                    "path": "UserService.ts",
+                    "path": "./UserService.ts",
                     "fileContent": "export class PetService extends ServiceBase {...}",
                     "summary": "User service: addUser, updateUser, deleteUser, getUserById, getUsers",
                 },
                 {
-                    "path": "UserModel.ts",
+                    "path": "./../UserModel.ts",
                     "fileContent": "export interface UserModel {...}",
                     "summary": "User model. Properties: id, name, email, password",
                 },

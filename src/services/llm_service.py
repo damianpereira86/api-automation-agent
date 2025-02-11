@@ -46,7 +46,6 @@ class LLMService:
 
         Args:
             config (Config): Configuration object
-            tools (Optional[List[BaseTool]]): Optional list of tools
         """
         self.config = config
         self.file_service = file_service

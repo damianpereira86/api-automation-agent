@@ -52,7 +52,7 @@ class FileCreationTool(BaseTool):
             self.logger.error(f"Error creating files: {e}")
             raise
 
-    async def _arun(self, files: List[FileSpec]) -> str:
+    async def _arun(self, files: List[FileSpec | ModelFileSpec]) -> str:
         return self._run(files)
 
     def _parse_input(
@@ -84,6 +84,9 @@ class FileCreationTool(BaseTool):
             )
 
         # Use appropriate spec class based on are_models
-        SpecClass = ModelFileSpec if self.are_models else FileSpec
-        file_specs = [SpecClass(**file_spec) for file_spec in valid_files]
+        spec_class = ModelFileSpec if self.are_models else FileSpec
+        file_specs = [spec_class(**file_spec) for file_spec in valid_files]
+        for file_spec in file_specs:
+            if file_spec.path.startswith("/"):
+                file_spec.path = f".{file_spec.path}"
         return {"files": file_specs}

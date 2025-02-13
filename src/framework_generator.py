@@ -1,4 +1,6 @@
-from typing import Optional, List, Dict, Any
+import signal
+import sys
+from typing import List, Dict, Any, Optional
 
 from .ai_tools.models.file_spec import FileSpec
 from .configuration.config import Config, GenerationOptions
@@ -6,6 +8,7 @@ from .processors.swagger_processor import SwaggerProcessor
 from .services.command_service import CommandService
 from .services.file_service import FileService
 from .services.llm_service import LLMService
+from .utils.checkpoint import Checkpoint
 from .utils.logger import Logger
 
 
@@ -26,11 +29,40 @@ class FrameworkGenerator:
         self.models_count = 0
         self.test_files_count = 0
         self.logger = Logger.get_logger(__name__)
+        self.checkpoint = Checkpoint(
+            self, "framework_generator", self.config.destination_folder
+        )
+
+        signal.signal(signal.SIGINT, self._handle_interrupt)
+        signal.signal(signal.SIGTERM, self._handle_interrupt)
+
+    def _handle_interrupt(self, signum, frame):
+        self.logger.warning("⚠️ Process interrupted! Saving progress...")
+        try:
+            self.save_state()
+        finally:
+            sys.exit(1)
 
     def _log_error(self, message: str, exc: Exception):
         """Helper method to log errors consistently"""
         self.logger.error(f"{message}: {exc}")
 
+    def save_state(self):
+        self.checkpoint.save(
+            state={
+                "destination_folder": self.config.destination_folder,
+                "self": {
+                    "models_count": self.models_count,
+                    "test_files_count": self.test_files_count,
+                },
+            }
+        )
+
+    def restore_state(self, namespace: str):
+        self.checkpoint.namespace = namespace
+        self.checkpoint.restore(restore_object=True)
+
+    @Checkpoint.checkpoint()
     def process_api_definition(self) -> List[Dict[str, Any]]:
         """Process the API definition file and return a list of API endpoints"""
         try:
@@ -44,6 +76,7 @@ class FrameworkGenerator:
             self._log_error("Error processing API definition", e)
             raise
 
+    @Checkpoint.checkpoint()
     def setup_framework(self):
         """Set up the framework environment"""
         try:
@@ -56,6 +89,7 @@ class FrameworkGenerator:
             self._log_error("Error setting up framework", e)
             raise
 
+    @Checkpoint.checkpoint()
     def create_env_file(self, api_definition):
         """Generate the .env file from the provided API definition"""
         try:
@@ -65,6 +99,7 @@ class FrameworkGenerator:
             self._log_error("Error creating .env file", e)
             raise
 
+    @Checkpoint.checkpoint()
     def generate(
         self,
         merged_api_definition_list: List[Dict[str, Any]],
@@ -73,7 +108,7 @@ class FrameworkGenerator:
         """Process the API definitions and generate models and tests"""
         try:
             self.logger.info("\nProcessing API definitions")
-            all_generated_models_info = []
+            all_generated_models = {"info": []}
             api_paths = []
             api_verbs = []
 
@@ -85,10 +120,11 @@ class FrameworkGenerator:
                 elif definition["type"] == "verb":
                     api_verbs.append(definition)
 
-            for path in api_paths:
+            for path in self.checkpoint.checkpoint_iter(
+                api_paths, "generate_paths", all_generated_models
+            ):
                 models = self._generate_models(path)
-
-                all_generated_models_info.append(
+                all_generated_models["info"].append(
                     {
                         "path": path["path"],
                         "files": [
@@ -97,14 +133,20 @@ class FrameworkGenerator:
                         "models": models,
                     }
                 )
+                self.logger.debug("Generated models for path: " + path["path"])
 
             if generate_tests in (
                 GenerationOptions.MODELS_AND_FIRST_TEST,
                 GenerationOptions.MODELS_AND_TESTS,
             ):
-                for verb in api_verbs:
+                for verb in self.checkpoint.checkpoint_iter(
+                    api_verbs, "generate_verbs"
+                ):
                     self._generate_tests(
-                        verb, all_generated_models_info, generate_tests
+                        verb, all_generated_models["info"], generate_tests
+                    )
+                    self.logger.debug(
+                        f"Generated tests for path: {verb['path']} - {verb['verb']}"
                     )
 
             self.logger.info(
@@ -112,8 +154,10 @@ class FrameworkGenerator:
             )
         except Exception as e:
             self._log_error("Error processing definitions", e)
+            self.save_state()
             raise
 
+    @Checkpoint.checkpoint()
     def run_final_checks(self, generate_tests: GenerationOptions):
         """Run final checks like TypeScript compilation and tests"""
         try:
@@ -141,6 +185,7 @@ class FrameworkGenerator:
 
         return any(path.startswith(endpoint) for endpoint in self.config.endpoints)
 
+    @Checkpoint.checkpoint("generate_models")
     def _generate_models(
         self, api_definition: Dict[str, Any]
     ) -> Optional[List[Dict[str, Any]]]:
@@ -155,7 +200,6 @@ class FrameworkGenerator:
                 self.logger.warning(f"No models generated for {api_definition['path']}")
             return models
         except Exception as e:
-
             self._log_error(
                 f"Error processing path definition for {api_definition['path']}", e
             )
@@ -205,6 +249,7 @@ class FrameworkGenerator:
             )
             if tests:
                 self.test_files_count += 1
+                self.save_state()
                 self._run_code_quality_checks(tests)
                 if generate_tests == GenerationOptions.MODELS_AND_TESTS:
                     self._generate_additional_tests(
@@ -239,6 +284,7 @@ class FrameworkGenerator:
                 tests, models, api_definition["yaml"]
             )
             if additional_tests:
+                self.save_state()
                 self._run_code_quality_checks(additional_tests)
         except Exception as e:
             self._log_error(

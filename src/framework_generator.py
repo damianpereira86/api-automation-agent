@@ -51,18 +51,16 @@ class FrameworkGenerator:
         self.checkpoint.save(
             state={
                 "destination_folder": self.config.destination_folder,
-                "models_count": self.models_count,
-                "test_files_count": self.test_files_count,
+                "self": {
+                    "models_count": self.models_count,
+                    "test_files_count": self.test_files_count,
+                },
             }
         )
 
     def restore_state(self, namespace: str):
         self.checkpoint.namespace = namespace
-        state = self.checkpoint.restore()
-        if state:
-            self.models_count = state.get("models_count", 0)
-            self.test_files_count = state.get("test_files_count", 0)
-            self.logger.info("🔄 Restored checkpoint state.")
+        self.checkpoint.restore(restore_object=True)
 
     @Checkpoint.checkpoint()
     def process_api_definition(self) -> List[Dict[str, Any]]:

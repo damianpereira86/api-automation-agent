@@ -1,10 +1,11 @@
 import json
 import logging
 import os
-from typing import List, Type
+from typing import List, Type, Dict, Any, Optional
 
 from langchain_core.tools import BaseTool
 from pydantic import BaseModel
+import json_repair
 
 from src.ai_tools.models.file_reading_input import FileReadingInput
 
@@ -53,3 +54,36 @@ class FileReadingTool(BaseTool):
     # TODO: Implement async file reading
     async def _arun(self, files: List[str]) -> List[FileSpec]:
         return self._run(files)
+
+    def _parse_input(
+        self, tool_input: str | Dict, tool_call_id: Optional[str] = None
+    ) -> Dict[str, Any]:
+        if isinstance(tool_input, str):
+            data = json_repair.loads(tool_input)
+        else:
+            data = tool_input
+
+        self.logger.debug(f"Received data['files']: {data.get('files', 'Not found')}")
+
+        if not isinstance(data, dict):
+            return {"files": []}
+
+        if isinstance(data["files"], str):
+            files_data = json_repair.loads(data["files"])
+        else:
+            files_data = data["files"]
+
+        if not isinstance(files_data, list):
+            return {"files": []}
+
+        # Ensure all file paths are strings and properly formatted
+        valid_files = [str(f) for f in files_data if f]
+        if len(valid_files) != len(files_data):
+            self.logger.info(
+                f"Filtered out {len(files_data) - len(valid_files)} invalid file paths"
+            )
+
+        # Add leading ./ if path starts with /
+        valid_files = [f".{f}" if f.startswith("/") else f for f in valid_files]
+
+        return {"files": valid_files}

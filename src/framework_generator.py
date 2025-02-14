@@ -238,6 +238,11 @@ class FrameworkGenerator:
                         other_models,
                     )
                 )
+
+                self.logger.debug(f"Additional models: {additional_models}")
+                if type(additional_models) is not list:
+                    additional_models = []
+
                 self.logger.info(
                     f"\nAdding additional models: {[model.path for model in additional_models]}"
                 )

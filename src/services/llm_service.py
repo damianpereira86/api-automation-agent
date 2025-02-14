@@ -79,6 +79,7 @@ class LLMService:
                 temperature=1,
                 max_retries=3,
                 api_key=pydantic.SecretStr(self.config.openai_api_key),
+                verbose=self.config.debug,
             )
         except Exception as e:
             self.logger.error(f"Model initialization error: {e}")
@@ -196,6 +197,7 @@ class LLMService:
         return self.create_ai_chain(
             PromptConfig.ADD_INFO,
             tools=[FileReadingTool(self.config, self.file_service)],
+            tool_to_use="read_files",
         ).invoke(
             {
                 "relevant_models": relevant_models,

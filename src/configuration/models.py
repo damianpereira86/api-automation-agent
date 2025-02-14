@@ -4,6 +4,7 @@ from enum import Enum
 class Model(Enum):
     GPT_4O = "gpt-4o"
     GPT_4O_MINI = "gpt-4o-mini"
+    O1 = "o1"
     O1_PREVIEW = "o1-preview"
     O1_MINI = "o1-mini"
     O3_MINI = "o3-mini"

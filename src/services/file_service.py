@@ -53,12 +53,14 @@ class FileService:
             try:
                 path = file_spec.path
                 content = file_spec.fileContent
+
                 if path.startswith("./"):
                     path = path[2:]
                 path = path.lstrip("/")
                 updated_path = os.path.join(destination_folder, path)
                 os.makedirs(os.path.dirname(updated_path), exist_ok=True)
-                with open(updated_path, "w") as f:
+
+                with open(updated_path, "w", encoding="utf-8") as f:
                     f.write(content)
 
                 self.logger.info(f"Created file: {path}")

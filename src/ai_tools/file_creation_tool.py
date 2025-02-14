@@ -82,6 +82,15 @@ class FileCreationTool(BaseTool):
                 f"Filtered out {len(files_data) - len(valid_files)} invalid file specifications"
             )
 
+        for file_spec in valid_files:
+            if isinstance(file_spec.get("fileContent"), str):
+                content = file_spec["fileContent"]
+                if content.startswith('"') and content.endswith('"'):
+                    content = content[1:-1]
+                file_spec["fileContent"] = bytes(content, "utf-8").decode(
+                    "unicode_escape"
+                )
+
         spec_class = ModelFileSpec if self.are_models else FileSpec
         file_specs = [spec_class(**file_spec) for file_spec in valid_files]
         for file_spec in file_specs:

@@ -185,7 +185,6 @@ class FrameworkGenerator:
 
         return any(path.startswith(endpoint) for endpoint in self.config.endpoints)
 
-    @Checkpoint.checkpoint("generate_models")
     def _generate_models(
         self, api_definition: Dict[str, Any]
     ) -> Optional[List[Dict[str, Any]]]:

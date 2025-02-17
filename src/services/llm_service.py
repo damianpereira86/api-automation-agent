@@ -28,6 +28,8 @@ class PromptConfig:
     SUMMARY = "./prompts/generate-model-summary.txt"
     ADD_INFO = "./prompts/add-models-context.txt"
     ADDITIONAL_TESTS = "./prompts/create-additional-tests.txt"
+    GROUP_PATHS_BY_SERVICE = "./prompts/group-paths-by-service.txt"
+    FIX_JSON = "./prompts/fix-json.txt"
 
 
 class LLMService:
@@ -63,7 +65,6 @@ class LLMService:
         try:
             if language_model and override:
                 self.config.model = language_model
-
             if self.config.model.is_anthropic():
                 return ChatAnthropic(
                     model_name=self.config.model.value,
@@ -105,7 +106,6 @@ class LLMService:
         self,
         prompt_path: str,
         tools: Optional[List[BaseTool]] = None,
-        tool_to_use: Optional[str] = None,
         language_model: Optional[Model] = None,
     ) -> Any:
         """
@@ -128,14 +128,18 @@ class LLMService:
                 self._load_prompt(prompt_path)
             )
 
-            converted_tools = [convert_tool_for_model(tool, llm) for tool in all_tools]
-
-            if tool_to_use:
-                llm_with_tools = llm.bind_tools(
-                    converted_tools, tool_choice=tool_to_use
-                )
+            if tools:
+                converted_tools = [
+                    convert_tool_for_model(tool, llm) for tool in all_tools
+                ]
+                if len(tools) == 1:
+                    llm_with_tools = llm.bind_tools(
+                        converted_tools, tool_choice=converted_tools[0]
+                    )
+                else:
+                    llm_with_tools = llm.bind_tools(converted_tools)
             else:
-                llm_with_tools = llm.bind_tools(converted_tools)
+                llm_with_tools = llm
 
             def process_response(response):
                 tool_map = {tool.name.lower(): tool for tool in all_tools}
@@ -221,6 +225,14 @@ class LLMService:
                     "api_definition": api_definition,
                 }
             )
+        )
+
+    def group_paths_by_service(self, paths: str) -> List[Dict[str, Any]]:
+        """Groups paths by service"""
+        return json.loads(
+            self.create_ai_chain(
+                prompt_path=PromptConfig.GROUP_PATHS_BY_SERVICE
+            ).invoke({"paths": paths})
         )
 
     def fix_typescript(

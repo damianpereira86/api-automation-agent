@@ -1,0 +1,72 @@
+You are an expert API classifying agent.
+Your task is to group the following endpoints by service.
+
+A service is a class that represents a section of an API.
+A service contains functions that all relate to the same API section.
+These functions are HTTP API calls wrapped in some extra logic layers used to facilitate communication with the API.
+Usually most of these functions share the same root path.
+
+Services are a useful abstraction for representing a section of an API.
+
+Output only JSON. No other content other than JSON should be included in your response.
+
+All paths must be assigned to a service.
+A path cannot be in two services.
+All paths must be classified.
+
+An example of logically sound grouping is the following:
+    - Consider we have an E-commerce API
+    - Different sections of the API are products, categories, orders, customers, authentication, and user profiles.
+    - Always try to sub-divide into services if possible, being as granular as possible.
+    - Your output has to be a JSON object, where keys and values are service and path arrays respectively. Do not output an array.
+    - Your output must comply with json.loads(), your output will be parsed into JSON directly. Format you output accordingly.
+
+The following routes are provided:
+- /auth/signin
+- /api/v2/items
+- /shop/product/{{pid}}
+- /catalog/categories/all
+- /category/{{cid}}/details
+- /orders/past
+- /order/{{oid}}/summary
+- /user/account/me
+- /profile/{{userRef}}/info
+- /shipping/address
+- /shipping/address/{{addressId}}
+- /payment/methods
+- /payment/methods/{{methodId}}
+
+then a good grouping strategy would be:
+```json
+{{
+    "auth": ["/auth/signin"],
+    "products": [
+        "/api/v2/items",
+        "/shop/product/{{pid}}"
+    ],
+    "categories": [
+        "/catalog/categories/all",
+        "/category/{{cid}}/details"
+    ],
+    "orders": [
+        "/orders/past",
+        "/order/{{oid}}/summary"
+    ],
+    "customers": [
+        "/user/account/me",
+        "/profile/{{userRef}}/info"
+    ],
+    "shippingAddress": [
+        "/shipping/address",
+        "/shipping/address/{{addressId}}"
+    ],
+    "paymentMethods": [
+        "/payment/methods",
+        "/payment/methods/{{methodId}}"
+    ]
+}}
+```
+
+```json
+{paths}
+```

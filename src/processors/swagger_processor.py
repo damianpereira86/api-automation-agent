@@ -1,10 +1,12 @@
 from typing import Dict, List, Union
 
+from src.processors.api_processor import APIProcessor
+
 from .swagger import APIDefinitionMerger, APIDefinitionSplitter, FileLoader
 from ..utils.logger import Logger
 
 
-class SwaggerProcessor:
+class SwaggerProcessor(APIProcessor):
     """Processes API definitions by orchestrating file loading, splitting, and merging."""
 
     def __init__(
@@ -54,3 +56,67 @@ class SwaggerProcessor:
         except Exception as e:
             self.logger.error(f"Error processing API definition: {e}")
             raise
+
+    def _should_process_endpoint(self, path: str, endpoints) -> bool:
+        """Check if an endpoint should be processed based on configuration"""
+        if endpoints is None:
+            return True
+
+        return any(path.startswith(endpoint) for endpoint in endpoints)
+
+    def get_api_paths(self, api_definition, endpoints=None):
+        result = []
+
+        for definition in api_definition:
+            if not self._should_process_endpoint(definition["path"], endpoints):
+                continue
+            if definition["type"] == "path":
+                result.append(definition)
+
+        return result
+
+    def get_api_path_name(self, api_path):
+        return api_path["path"]
+
+    def get_api_verbs(self, api_definition):
+        result = []
+
+        for definition in api_definition:
+            if definition["type"] == "verb":
+                result.append(definition)
+
+        return result
+
+    def get_relevant_models(self, all_models, api_verb):
+        result = []
+
+        for model in all_models:
+            if api_verb["path"] == model["path"] or str(api_verb["path"]).startswith(
+                model["path"] + "/"
+            ):
+                result.append(model["models"])
+
+        return result
+
+    def get_other_models(self, all_models, api_verb):
+        result = []
+
+        for model in all_models:
+            if not (
+                api_verb["path"] == model["path"]
+                or str(api_verb["path"]).startswith(model["path"] + "/")
+            ):
+                result.append(
+                    {
+                        "path": model["path"],
+                        "files": model["files"],
+                    }
+                )
+
+        return result
+
+    def get_api_verb_content(self, api_verb):
+        return api_verb["yaml"]
+
+    def get_api_path_content(self, api_path):
+        return api_path["yaml"]

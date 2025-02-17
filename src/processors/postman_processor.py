@@ -37,15 +37,13 @@ class PostmanProcessor(APIProcessor):
             verb_path_pairs, paths_grouped_by_service
         )
 
-        return self.service_dict
+        return copy.deepcopy(self.service_dict).items()
 
     def get_api_path_name(self, api_path):
         return api_path[0]
 
     def get_relevant_models(self, api_verb, all_models):
         result = []
-
-        print("API VERB", api_verb)
 
         for model in all_models:
             if api_verb["service"] == model["path"]:
@@ -140,7 +138,6 @@ class PostmanProcessor(APIProcessor):
     def map_verb_path_pairs_to_services(
         self, verb_path_pairs, no_query_params_routes_grouped_by_service
     ):
-
         verb_chunks_with_query_params = self._extract_verb_path_info(verb_path_pairs)
 
         verb_path_pairs_and_services = {}
@@ -166,9 +163,6 @@ class PostmanProcessor(APIProcessor):
         return verb_path_pairs_and_services
 
     def _add_service_name_to_verb_chunks(self, verb_chunks, all_services_dict):
-
-        print("SERVICE DICT", all_services_dict.items())
-
         verb_chunks_tagged_with_service = copy.deepcopy(verb_chunks)
 
         for verb_chunk in verb_chunks_tagged_with_service:
@@ -180,7 +174,6 @@ class PostmanProcessor(APIProcessor):
                 verb_chunk_path_no_query_params = verb_chunk["path"].split("?")[0]
 
                 if verb_chunk_path_no_query_params in routes_in_service:
-                    print("TRIGGERED!")
                     verb_chunk["service"] = service
                     break
 

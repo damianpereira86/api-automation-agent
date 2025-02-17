@@ -112,17 +112,9 @@ class FrameworkGenerator:
             api_paths = self.api_processor.get_api_paths(merged_api_definition_list)
             api_verbs = self.api_processor.get_api_verbs(merged_api_definition_list)
 
-            if isinstance(api_paths, dict):
-                api_paths = api_paths.items()
-
             for path in self.checkpoint.checkpoint_iter(
                 api_paths, "generate_paths", all_generated_models
             ):
-                """
-                print("LENGHT OF API PATHS", len(api_paths))
-                print("API PATHS CONTENT", api_paths)
-                print("PATH ITEM CONTENT", path)
-                """
                 models = self._generate_models(path)
                 all_generated_models["info"].append(
                     {
@@ -179,7 +171,6 @@ class FrameworkGenerator:
             self._log_error("Error during final checks", e)
             raise
 
-    @Checkpoint.checkpoint("generate_models")
     def _generate_models(
         self, api_definition: Dict[str, Any]
     ) -> Optional[List[Dict[str, Any]]]:

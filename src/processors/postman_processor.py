@@ -87,6 +87,15 @@ class PostmanProcessor(APIProcessor):
 
         return paths_grouped_by_service
 
+    def get_api_verb_path(self, api_verb_definition):
+        return api_verb_definition["path"]
+
+    def get_api_verb_name(self, api_verb_definition):
+        return api_verb_definition["verb"]
+
+    def get_api_verb_rootpath(self, api_verb_definition):
+        return api_verb_definition["service"]
+
     def _contains_same_items(self, array1, array2):
         """
         Check if two arrays contain the same items

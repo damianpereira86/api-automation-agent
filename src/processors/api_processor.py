@@ -31,5 +31,17 @@ class APIProcessor(ABC):
         pass
 
     @abstractmethod
+    def get_api_verb_rootpath(self, api_verb_definition):
+        pass
+
+    @abstractmethod
+    def get_api_verb_path(self, api_verb_definition):
+        pass
+
+    @abstractmethod
     def get_api_path_name(self, api_path):
+        pass
+
+    @abstractmethod
+    def get_api_verb_name(self, api_verb):
         pass

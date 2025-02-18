@@ -1,5 +1,6 @@
 import signal
 import sys
+import json
 from typing import List, Dict, Any, Optional
 
 from src.processors.api_processor import APIProcessor
@@ -125,7 +126,10 @@ class FrameworkGenerator:
                         "models": models,
                     }
                 )
-                # self.logger.debug("Generated models for path: " + path["path"])
+                self.logger.debug(
+                    "Generated models for path: "
+                    + self.api_processor.get_api_path_name(path)
+                )
 
             if generate_tests in (
                 GenerationOptions.MODELS_AND_FIRST_TEST,
@@ -134,14 +138,28 @@ class FrameworkGenerator:
                 for verb in self.checkpoint.checkpoint_iter(
                     api_verbs, "generate_verbs"
                 ):
-                    self._generate_tests(
+                    service_related_to_verb = self.api_processor.get_api_verb_rootpath(
+                        verb
+                    )
+                    tests = self._generate_tests(
                         verb, all_generated_models["info"], generate_tests
                     )
-                    """
+                    for file in tests:
+                        if "/responses" in file["path"]:
+                            for model in all_generated_models["info"]:
+                                if model["path"] == service_related_to_verb:
+                                    model["files"].append(file["path"])
+                                    model["models"].append(
+                                        {
+                                            "path": file["path"],
+                                            "fileContent": file["fileContent"],
+                                        }
+                                    )
+
                     self.logger.debug(
-                        f"Generated tests for path: {verb['path']} - {verb['verb']}"
-                    )                    
-                    """
+                        f"Generated tests for path: {self.api_processor.get_api_verb_path(verb)} - {self.api_processor.get_api_verb_name(verb)}"
+                    )
+
             self.logger.info(
                 f"\nGeneration complete. {self.models_count} models and {self.test_files_count} tests were generated."
             )
@@ -176,24 +194,29 @@ class FrameworkGenerator:
     ) -> Optional[List[Dict[str, Any]]]:
         """Process a path definition and generate models"""
         try:
-            # self.logger.info(f"\nGenerating models for path: {api_definition['path']}")
+            self.logger.info(
+                f"\nGenerating models for path: {self.api_processor.get_api_path_name(api_definition)}"
+            )
             models = self.llm_service.generate_models(
                 self.api_processor.get_api_path_content(api_definition)
             )
             if models:
                 self.models_count += len(models)
                 self._run_code_quality_checks(models, are_models=True)
-            """
+
             else:
-                self.logger.warning(f"No models generated for {api_definition['path']}")
-            """
+                self.logger.warning(
+                    f"No models generated for {self.api_processor.get_api_path_name(api_definition)}"
+                )
+
             return models
         except Exception as e:
-            """
+
             self._log_error(
-                f"Error processing path definition for {api_definition['path']}", e
+                f"Error processing path definition for {self.api_processor.get_api_path_name(api_definition)}",
+                e,
             )
-            """
+
             raise
 
     def _generate_tests(
@@ -201,18 +224,18 @@ class FrameworkGenerator:
         api_verb: Dict[str, Any],
         all_models: List[Dict[str, Any]],
         generate_tests: GenerationOptions,
-    ):
+    ) -> Optional[List[Dict[str, Any]]]:
         """Generate tests for a specific verb (HTTP method) in the API definition"""
         try:
             relevant_models = self.api_processor.get_relevant_models(
                 api_verb, all_models
             )
             other_models = self.api_processor.get_other_models(api_verb, all_models)
-            """
+
             self.logger.info(
-                f"\nGenerating first test for path: {api_verb['path']} and verb: {api_verb['verb']}"
+                f"\nGenerating first test for path: {self.api_processor.get_api_verb_path(api_verb)} and verb: {self.api_processor.get_api_verb_name(api_verb)}"
             )
-            """
+
             if other_models:
                 additional_models: List[FileSpec] = (
                     self.llm_service.get_additional_models(
@@ -228,9 +251,11 @@ class FrameworkGenerator:
             tests = self.llm_service.generate_first_test(
                 self.api_processor.get_api_verb_content(api_verb), relevant_models
             )
+
             if tests:
-                self.test_files_count += 1
+                self.test_files_count += len(tests)
                 self.save_state()
+
                 self._run_code_quality_checks(tests)
                 if generate_tests == GenerationOptions.MODELS_AND_TESTS:
                     additional_tests = self._generate_additional_tests(
@@ -242,19 +267,19 @@ class FrameworkGenerator:
                     return additional_tests
 
                 return tests
-            """
+
             else:
                 self.logger.warning(
-                    f"No tests generated for {api_verb['path']} - {api_verb['verb']}"
+                    f"No tests generated for {self.api_processor.get_api_verb_path(api_verb)} - {self.api_processor.get_api_verb_name('verb')}"
                 )
-            """
+
         except Exception as e:
-            """
+
             self._log_error(
-                f"Error processing verb definition for {api_verb['path']} - {api_verb['verb']}",
+                f"Error processing verb definition for {self.api_processor.get_api_verb_path(api_verb)} - {self.api_processor.get_api_verb_name(api_verb)}",
                 e,
             )
-            """
+
             raise
 
     def _generate_additional_tests(
@@ -265,11 +290,11 @@ class FrameworkGenerator:
     ):
         """Generate additional tests based on the initial test and models"""
         try:
-            """
+
             self.logger.info(
-                f"\nGenerating additional tests for path: {api_definition['path']} and verb: {api_definition['verb']}"
+                f"\nGenerating additional tests for path: {self.api_processor.get_api_verb_path(api_definition)} and verb: {self.api_processor.get_api_verb_name(api_definition)}"
             )
-            """
+
             additional_tests = self.llm_service.generate_additional_tests(
                 tests,
                 models,
@@ -281,12 +306,12 @@ class FrameworkGenerator:
 
             return additional_tests
         except Exception as e:
-            """
+
             self._log_error(
-                f"Error generating additional tests for {api_definition['path']} - {api_definition['verb']}",
+                f"Error generating additional tests for {self.api_processor.get_api_verb_path(api_definition)} - {self.api_processor.get_api_verb_name(api_definition)}",
                 e,
             )
-            """
+
             raise
 
     def _run_code_quality_checks(

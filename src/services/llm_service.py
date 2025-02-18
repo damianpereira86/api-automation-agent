@@ -8,6 +8,7 @@ from langchain_core.language_models import BaseLanguageModel
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.tools import BaseTool
 from src.configuration.models import Model
+from src.utils.constants import DataSource
 
 from .file_service import FileService
 from ..configuration.config import Config
@@ -23,6 +24,7 @@ class PromptConfig:
     DOT_ENV = "./prompts/create-dot-env.txt"
     MODELS = "./prompts/create-models.txt"
     FIRST_TEST = "./prompts/create-first-test.txt"
+    FIRST_TEST_POSTMAN = "./prompts/create-first-test-postman.txt"
     TESTS = "./prompts/create-tests.txt"
     FIX_TYPESCRIPT = "./prompts/fix-typescript.txt"
     SUMMARY = "./prompts/generate-model-summary.txt"
@@ -183,9 +185,15 @@ class LLMService:
         self, api_definition: Dict[str, Any], models: List[Dict[str, Any]]
     ) -> List[Dict[str, Any]]:
         """Generate first test from API definition and models."""
+        prompt = None
+        if self.config.data_source == DataSource.POSTMAN:
+            prompt = PromptConfig.FIRST_TEST_POSTMAN
+        else:
+            prompt = self.config.generate
+
         return json.loads(
             self.create_ai_chain(
-                PromptConfig.FIRST_TEST,
+                prompt,
                 tools=[FileCreationTool(self.config, self.file_service)],
             ).invoke({"api_definition": api_definition, "models": models})
         )

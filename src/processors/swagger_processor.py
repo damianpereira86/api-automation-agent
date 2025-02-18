@@ -4,6 +4,7 @@ from src.processors.api_processor import APIProcessor
 
 from .swagger import APIDefinitionMerger, APIDefinitionSplitter, FileLoader
 from ..utils.logger import Logger
+import re
 
 
 class SwaggerProcessor(APIProcessor):
@@ -86,6 +87,21 @@ class SwaggerProcessor(APIProcessor):
                 result.append(definition)
 
         return result
+
+    def get_api_verb_path(self, api_verb_definition):
+        return api_verb_definition["path"]
+
+    def get_api_verb_rootpath(self, api_verb_definition):
+        return self._get_root_path(api_verb_definition["path"])
+
+    def get_api_verb_name(self, api_verb):
+        return api_verb["verb"]
+
+    def _get_root_path(self, path: str) -> str:
+        match = re.match(r"(/[^/?]+)", path)
+        if match:
+            return match.group(1)
+        return path
 
     def get_relevant_models(self, all_models, api_verb):
         result = []

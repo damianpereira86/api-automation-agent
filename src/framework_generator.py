@@ -86,7 +86,7 @@ class FrameworkGenerator:
             )
             self.file_service.copy_framework_template(self.config.destination_folder)
             if self.config.data_source == DataSource.POSTMAN:
-                self.file_service.create_run_tests_in_order_file(
+                self.file_service.update_framework_for_postman(
                     self.config.destination_folder, api_definition
                 )
             self.command_service.install_dependencies()

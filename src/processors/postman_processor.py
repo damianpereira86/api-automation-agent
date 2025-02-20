@@ -1,6 +1,7 @@
 import json
 import re
 import copy
+from typing import Dict, List, Optional, Tuple, Union
 
 from src.configuration.config import Config
 from src.processors.api_processor import APIProcessor
@@ -17,12 +18,16 @@ class PostmanProcessor(APIProcessor):
         self.llm_service = llm_service
         self.config = config
 
-    def process_api_definition(self, json_file_path):
+    def process_api_definition(
+        self, json_file_path: str
+    ) -> List[Dict[str, Union[str, Dict]]]:
         with open(json_file_path, encoding="utf-8") as postman_json_export:
             data = json.load(postman_json_export)
             return self.extract_requests(data)
 
-    def extract_env_vars(self, extracted_requests):
+    def extract_env_vars(
+        self, extracted_requests: List[Dict[str, Union[str, Dict]]]
+    ) -> List[str]:
         env_vars = set()
         for request in extracted_requests:
             path = request.get("path", "")
@@ -33,7 +38,9 @@ class PostmanProcessor(APIProcessor):
                     break
         return list(env_vars)
 
-    def get_api_paths(self, api_definition, endpoints=None):
+    def get_api_paths(
+        self, api_definition: Dict[str, Union[str, Dict]], endpoints=Optional[List[str]]
+    ) -> List[Tuple]:
         all_paths_no_query_params = self.get_all_distinct_paths_no_query_params(
             api_definition
         )
@@ -50,10 +57,14 @@ class PostmanProcessor(APIProcessor):
 
         return copy.deepcopy(self.service_dict).items()
 
-    def get_api_path_name(self, api_path):
+    def get_api_path_name(self, api_path: Tuple) -> str:
         return api_path[0]
 
-    def get_relevant_models(self, api_verb, all_models):
+    def get_relevant_models(
+        self,
+        api_verb: Dict[str, Union[str, Dict]],
+        all_models: List[Dict[str, Union[str, Dict]]],
+    ) -> List[str]:
         result = []
 
         for model in all_models:
@@ -62,7 +73,11 @@ class PostmanProcessor(APIProcessor):
 
         return result
 
-    def get_other_models(self, api_verb, all_models):
+    def get_other_models(
+        self,
+        api_verb: Dict[str, Union[str, Dict]],
+        all_models: List[Dict[str, Union[str, Dict]]],
+    ) -> List[Dict[str, List[str]]]:
         result = []
 
         for model in all_models:
@@ -73,7 +88,9 @@ class PostmanProcessor(APIProcessor):
                     }
                 )
 
-    def _group_paths_by_service(self, all_distinct_paths_no_query_params):
+    def _group_paths_by_service(
+        self, all_distinct_paths_no_query_params: List[str]
+    ) -> Dict[str, List[str]]:
         paths_grouped_by_service = self.llm_service.group_paths_by_service(
             all_distinct_paths_no_query_params
         )
@@ -98,34 +115,48 @@ class PostmanProcessor(APIProcessor):
 
         return paths_grouped_by_service
 
-    def get_api_verb_path(self, api_verb_definition):
+    def get_api_verb_path(
+        self, api_verb_definition: Dict[str, Union[str, Dict]]
+    ) -> str:
         return api_verb_definition["path"]
 
-    def get_api_verb_name(self, api_verb_definition):
+    def get_api_verb_name(
+        self, api_verb_definition: Dict[str, Union[str, Dict]]
+    ) -> str:
         return api_verb_definition["verb"]
 
-    def get_api_verb_rootpath(self, api_verb_definition):
+    def get_api_verb_rootpath(
+        self, api_verb_definition: Dict[str, Union[str, Dict]]
+    ) -> str:
         return api_verb_definition["service"]
 
-    def _contains_same_items(self, array1, array2):
+    def _contains_same_items(self, array1: List, array2: List) -> bool:
         """
         Check if two arrays contain the same items
         """
         return sorted(array1) == sorted(array2)
 
-    def _get_all_paths_from_service_dict(self, service_dict):
+    def _get_all_paths_from_service_dict(
+        self, service_dict: Dict[str, List[str]]
+    ) -> List[str]:
         all_paths = []
         for paths in service_dict.values():
             all_paths.extend(paths)
         return all_paths
 
-    def get_api_verbs(self, api_definition):
+    def get_api_verbs(
+        self, api_definition: Dict[str, str]
+    ) -> List[Dict[str, Union[str, Dict]]]:
         return self._add_service_name_to_verb_chunks(api_definition, self.service_dict)
 
-    def get_api_verb_content(self, api_verb):
+    def get_api_verb_content(
+        self, api_verb: Dict[str, Union[str, Dict]]
+    ) -> Dict[str, Union[str, Dict]]:
         return api_verb
 
-    def get_api_path_content(self, api_path):
+    def get_api_path_content(
+        self, api_path: Dict[str, Union[str, Dict]]
+    ) -> Dict[str, Union[str, Dict]]:
         return api_path
 
     def extract_requests(self, data, path=""):
@@ -156,8 +187,10 @@ class PostmanProcessor(APIProcessor):
         return results
 
     def map_verb_path_pairs_to_services(
-        self, verb_path_pairs, no_query_params_routes_grouped_by_service
-    ):
+        self,
+        verb_path_pairs: Dict[str, Union[List, Dict, str]],
+        no_query_params_routes_grouped_by_service: Dict[str, List[str]],
+    ) -> Dict[str, Union[List, Dict, str]]:
         verb_chunks_with_query_params = self._extract_verb_path_info(verb_path_pairs)
 
         verb_path_pairs_and_services = {}
@@ -182,7 +215,11 @@ class PostmanProcessor(APIProcessor):
 
         return verb_path_pairs_and_services
 
-    def _add_service_name_to_verb_chunks(self, verb_chunks, all_services_dict):
+    def _add_service_name_to_verb_chunks(
+        self,
+        verb_chunks: List[Dict[str, Union[List, Dict, str]]],
+        all_services_dict: Dict[str, List[str]],
+    ) -> List[Dict[str, Union[List, Dict, str]]]:
         verb_chunks_tagged_with_service = copy.deepcopy(verb_chunks)
 
         for verb_chunk in verb_chunks_tagged_with_service:
@@ -199,14 +236,18 @@ class PostmanProcessor(APIProcessor):
 
         return verb_chunks_tagged_with_service
 
-    def get_all_distinct_paths_no_query_params(self, extracted_verb_chunks):
+    def get_all_distinct_paths_no_query_params(
+        self, extracted_verb_chunks: List[Dict[str, Union[List, Dict, str]]]
+    ) -> List[str]:
         distinct_paths_no_query_params = list(
             set([item["path"].split("?")[0] for item in extracted_verb_chunks])
         )
 
         return distinct_paths_no_query_params
 
-    def _extract_verb_path_info(self, extracted_requests):
+    def _extract_verb_path_info(
+        self, extracted_requests: List[Dict[str, Union[List, Dict, str]]]
+    ) -> List[Dict[str, Union[Dict, str]]]:
 
         result = []
 
@@ -267,7 +308,9 @@ class PostmanProcessor(APIProcessor):
 
         return result
 
-    def _accumulate_query_params(self, all_query_params, current_request_query_params):
+    def _accumulate_query_params(
+        self, all_query_params: Dict, current_request_query_params: str
+    ):
         for param in current_request_query_params:
 
             param_array = param.split("=")
@@ -284,7 +327,7 @@ class PostmanProcessor(APIProcessor):
                     all_query_params[param_name] = "string"
 
     def _accumulate_request_body_attributes(
-        self, all_body_attributes, current_request_body
+        self, all_body_attributes: Dict, current_request_body: Dict
     ):
         for key, value in current_request_body.items():
             if key not in all_body_attributes:
@@ -312,7 +355,9 @@ class PostmanProcessor(APIProcessor):
             return ""
         return words[0].lower() + "".join(word.capitalize() for word in words[1:])
 
-    def _extract_request_data(self, data, path):
+    def _extract_request_data(
+        self, data: Dict[str, Union[str, List, Dict]], path: str
+    ) -> List[Dict[str, Union[str, Dict, List]]]:
         result = {
             "file_path": "",
             "path": "",
@@ -356,17 +401,17 @@ class PostmanProcessor(APIProcessor):
 
         return result
 
-    def _item_is_a_test_case(self, data: str):
+    def _item_is_a_test_case(self, data: str) -> bool:
         return "request" in data or (("event" in data) and ("request" in data))
 
-    def _get_root_path(self, full_path):
+    def _get_root_path(self, full_path: str) -> str:
         match = re.search(r"(?<!/)/([^/]+)/", full_path)
         if match:
             return match.group(1)
         else:
             return ""
 
-    def _map_object_attributes(self, obj):
+    def _map_object_attributes(self, obj: Dict) -> Dict:
         mapped_attributes = {}
 
         for key, value in obj.items():

@@ -50,7 +50,7 @@ class FileService:
         file_content = ["// This file runs the tests in order"]
 
         for request in extracted_requests:
-            filepath = f'./src/tests{request["file_path"]}/{request["name"]}.spec.ts'
+            filepath = f'./{request["file_path"]}.spec.ts'
             file_content.append(f'import "{filepath}";')
 
         run_tests_file_spec = FileSpec(

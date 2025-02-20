@@ -314,7 +314,7 @@ class PostmanProcessor(APIProcessor):
 
     def _extract_request_data(self, data, path):
         result = {
-            "file_path": path,
+            "file_path": "",
             "path": "",
             "verb": "",
             "body": {},
@@ -352,6 +352,7 @@ class PostmanProcessor(APIProcessor):
                     result["prerequest"] = script.get("script", {}).get("exec", [])
 
         result["name"] = self._to_camel_case(data["name"])
+        result["file_path"] = f"src/tests{path}/{result["name"]}"
 
         return result
 

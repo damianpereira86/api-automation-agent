@@ -12,8 +12,7 @@ Your task is to create API automation test code based on a JSON specification fi
 - Creating new request interfaces is prohibited.
 - Creating new response interfaces is allowed.
 - It is strictly prohibited to create response interfaces in some location other than ./src/models/responses. Use the specified response folder when creating response interfaces.
-- The filepath for test file creation should be a combination of the file_path attribute and the name attribute, resulting in a filepath such as file_path/name
-- When creating test files (TypeScript .spec files) using the file creation tool, place the test files inside the tests folder, naming the files according to the 'name' attribute provided.
+- Use the file_path attribute to determine the file creation path when creating test files. The last section indicates the test file name.
 - Create response interface files based on the assertions shown in the 'script' section shown in the JSON specification. The attributes and structures shown in the assertions should reflect what the interface must look like.
 - Don't create response interfaces if you're supplied with a matching interface already.
 - Use the service model class and any other models detailed in the Models section. These models are for your reference, do not include them in the response.

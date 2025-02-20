@@ -135,8 +135,11 @@ class LLMService:
                 ]
 
                 if len(tools) == 1:
+                    tool_name = converted_tools[0]
+                    if self.config.model.is_anthropic():
+                        tool_name = converted_tools[0]["name"]
                     llm_with_tools = llm.bind_tools(
-                        converted_tools, tool_choice=converted_tools[0]["name"]
+                        converted_tools, tool_choice=tool_name
                     )
                 else:
                     llm_with_tools = llm.bind_tools(converted_tools)

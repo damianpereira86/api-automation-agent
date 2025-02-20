@@ -30,6 +30,7 @@ class Config:
     destination_folder: str = ""
     endpoints: Optional[List[str]] = None
     use_existing_framework: bool = False
+    fix_retry_json: int = 5
 
     def update(self, updates: dict[str, Any]):
         for key, value in updates.items():

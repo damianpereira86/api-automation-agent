@@ -81,7 +81,7 @@ class PostmanProcessor(APIProcessor):
         one_or_more_paths_left_out = True
         attempts = 0
         while (one_or_more_paths_left_out == True) and (
-            attempts < 10  # TODO change for config.fix_json_retry
+            attempts < self.config.fix_retry_json
         ):
 
             if self._contains_same_items(

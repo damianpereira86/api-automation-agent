@@ -1,5 +1,6 @@
 import os
 import shutil
+import json
 from typing import List, Optional
 
 from src.ai_tools.models.file_spec import FileSpec
@@ -17,7 +18,9 @@ class FileService:
         """
         self.logger = Logger.get_logger(__name__)
 
-    def copy_framework_template(self, destination_folder: str) -> Optional[str]:
+    def copy_framework_template(
+        self, destination_folder: str, api_definition=None
+    ) -> Optional[str]:
         """
         Copy the API framework template to a new folder.
 
@@ -36,6 +39,43 @@ class FileService:
         except Exception as e:
             self.logger.error(f"Error copying folder: {e}")
             return None
+
+    def update_framework_for_postman(self, destination_folder, extracted_requests):
+        self._create_run_order_file(destination_folder, extracted_requests)
+        self._update_package_dot_json(destination_folder)
+
+    def _create_run_order_file(
+        self, destination_folder: str, extracted_requests: List[str]
+    ):
+        file_content = ["// This file runs the tests in order"]
+
+        for request in extracted_requests:
+            filepath = f'./{request["file_path"]}.spec.ts'
+            file_content.append(f'import "{filepath}";')
+
+        run_tests_file_spec = FileSpec(
+            path="runTestsInOrder.js", fileContent="\n".join(file_content)
+        )
+
+        self.create_files(destination_folder, [run_tests_file_spec])
+        self.logger.info(f"Created runTestsInOrder.js file at {destination_folder}")
+
+    def _update_package_dot_json(self, destination_folder: str):
+        package_json_path = os.path.join(destination_folder, "package.json")
+
+        try:
+            with open(package_json_path, "r") as file:
+                package_json = json.load(file)
+                package_json["scripts"][
+                    "test"
+                ] = "mocha runTestsInOrder.js --timeout 10000"
+
+            with open(package_json_path, "w") as file:
+                json.dump(package_json, file, indent=2)
+
+            self.logger.info(f"Updated package.json at {package_json_path}")
+        except Exception as e:
+            self.logger.error(f"Failed to update package.json: {e}")
 
     def create_files(self, destination_folder: str, files: List[FileSpec]) -> List[str]:
         """

@@ -26,9 +26,11 @@ class Config:
     anthropic_api_key: str = ""
     openai_api_key: str = ""
     api_file_path: str = ""
+    data_source: str = ""
     destination_folder: str = ""
     endpoints: Optional[List[str]] = None
     use_existing_framework: bool = False
+    fix_retry_json: int = 5
 
     def update(self, updates: dict[str, Any]):
         for key, value in updates.items():

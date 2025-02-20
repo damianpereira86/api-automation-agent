@@ -12,3 +12,8 @@ class Model(Enum):
 
     def is_anthropic(self):
         return self.value in [Model.CLAUDE_SONNET]
+
+
+class DataSource(Enum):
+    SWAGGER = "swagger"
+    POSTMAN = "postman"

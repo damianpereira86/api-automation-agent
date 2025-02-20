@@ -45,3 +45,7 @@ class APIProcessor(ABC):
     @abstractmethod
     def get_api_verb_name(self, api_verb):
         pass
+
+    @abstractmethod
+    def extract_env_vars(self, api_defintions):
+        pass

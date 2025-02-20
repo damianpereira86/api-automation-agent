@@ -17,7 +17,9 @@ class FileService:
         """
         self.logger = Logger.get_logger(__name__)
 
-    def copy_framework_template(self, destination_folder: str) -> Optional[str]:
+    def copy_framework_template(
+        self, destination_folder: str, api_definition=None
+    ) -> Optional[str]:
         """
         Copy the API framework template to a new folder.
 
@@ -36,6 +38,20 @@ class FileService:
         except Exception as e:
             self.logger.error(f"Error copying folder: {e}")
             return None
+
+    def create_run_tests_in_order_file(self, destination_folder, extracted_requests):
+        file_content = ["// This file runs the tests in order"]
+
+        for request in extracted_requests:
+            filepath = f'./src/tests{request["file_path"]}/{request["name"]}.spec.ts'
+            file_content.append(f'import "{filepath}";')
+
+        run_tests_file_spec = FileSpec(
+            path="runTestsInOrder.js", fileContent="\n".join(file_content)
+        )
+
+        self.create_files(destination_folder, [run_tests_file_spec])
+        self.logger.info(f"Created runTestsInOrder.js file at {destination_folder}")
 
     def create_files(self, destination_folder: str, files: List[FileSpec]) -> List[str]:
         """

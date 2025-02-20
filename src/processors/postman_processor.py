@@ -22,6 +22,17 @@ class PostmanProcessor(APIProcessor):
             data = json.load(postman_json_export)
             return self.extract_requests(data)
 
+    def extract_env_vars(self, extracted_requests):
+        env_vars = set()
+        for request in extracted_requests:
+            path = request.get("path", "")
+            if path.startswith("{{"):
+                match = re.match(r"\{\{(.*?)\}\}", path)
+                if match:
+                    env_vars.add(match.group(1))
+                    break
+        return list(env_vars)
+
     def get_api_paths(self, api_definition, endpoints=None):
         all_paths_no_query_params = self.get_all_distinct_paths_no_query_params(
             api_definition

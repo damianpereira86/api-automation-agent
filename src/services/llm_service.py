@@ -31,7 +31,6 @@ class PromptConfig:
     ADD_INFO = "./prompts/add-models-context.txt"
     ADDITIONAL_TESTS = "./prompts/create-additional-tests.txt"
     GROUP_PATHS_BY_SERVICE = "./prompts/group-paths-by-service.txt"
-    FIX_JSON = "./prompts/fix-json.txt"
 
 
 class LLMService:
@@ -134,9 +133,10 @@ class LLMService:
                 converted_tools = [
                     convert_tool_for_model(tool, llm) for tool in all_tools
                 ]
+
                 if len(tools) == 1:
                     llm_with_tools = llm.bind_tools(
-                        converted_tools, tool_choice=converted_tools[0]
+                        converted_tools, tool_choice=converted_tools[0]["name"]
                     )
                 else:
                     llm_with_tools = llm.bind_tools(converted_tools)

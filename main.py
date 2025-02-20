@@ -58,19 +58,16 @@ def main(
             Returns:
                 DataSource: The detected data source type (SWAGGER, POSTMAN, or UNKNOWN)
             """
-            # Check file extension first
             if api_file_path.endswith((".yml", ".yaml")):
                 return DataSource.SWAGGER
 
             try:
-                # Try to read and parse the file
                 with open(api_file_path, "r") as f:
                     if api_file_path.endswith(".json"):
                         data = json.load(f)
                     else:
                         data = yaml.safe_load(f)
 
-                # Check the content structure
                 if isinstance(data, dict):
                     if "info" in data and "_postman_id" in data["info"]:
                         return DataSource.POSTMAN
@@ -132,8 +129,8 @@ def main(
         api_definitions = framework_generator.process_api_definition()
 
         if not config.use_existing_framework:
-            framework_generator.setup_framework()
-            framework_generator.create_env_file(api_definitions[0])
+            framework_generator.setup_framework(api_definitions)
+            framework_generator.create_env_file(api_definitions)
 
         framework_generator.generate(api_definitions, config.generate)
         framework_generator.run_final_checks(config.generate)

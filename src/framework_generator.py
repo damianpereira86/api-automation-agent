@@ -4,6 +4,7 @@ import json
 from typing import List, Dict, Any, Optional
 
 from src.processors.api_processor import APIProcessor
+from src.utils.constants import DataSource
 
 from .ai_tools.models.file_spec import FileSpec
 from .configuration.config import Config, GenerationOptions
@@ -77,24 +78,29 @@ class FrameworkGenerator:
             raise
 
     @Checkpoint.checkpoint()
-    def setup_framework(self):
+    def setup_framework(self, api_definition):
         """Set up the framework environment"""
         try:
             self.logger.info(
                 f"\nSetting up framework in {self.config.destination_folder}"
             )
             self.file_service.copy_framework_template(self.config.destination_folder)
+            if self.config.data_source == DataSource.POSTMAN:
+                self.file_service.create_run_tests_in_order_file(
+                    self.config.destination_folder, api_definition
+                )
             self.command_service.install_dependencies()
         except Exception as e:
             self._log_error("Error setting up framework", e)
             raise
 
     @Checkpoint.checkpoint()
-    def create_env_file(self, api_definition):
+    def create_env_file(self, api_definitions):
         """Generate the .env file from the provided API definition"""
         try:
             self.logger.info("\nGenerating .env file")
-            self.llm_service.generate_dot_env(api_definition)
+            env_vars_data = self.api_processor.extract_env_vars(api_definitions)
+            self.llm_service.generate_dot_env(env_vars_data)
         except Exception as e:
             self._log_error("Error creating .env file", e)
             raise

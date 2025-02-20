@@ -65,6 +65,9 @@ class SwaggerProcessor(APIProcessor):
 
         return any(path.startswith(endpoint) for endpoint in endpoints)
 
+    def extract_env_vars(self, api_definitions):
+        return api_definitions[0]
+
     def get_api_paths(self, api_definition, endpoints=None):
         result = []
 

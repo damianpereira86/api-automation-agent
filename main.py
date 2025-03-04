@@ -61,6 +61,7 @@ def main(
                 "endpoints": args.endpoints,
                 "generate": GenerationOptions(args.generate),
                 "use_existing_framework": args.use_existing_framework,
+                "list_endpoints": args.list_endpoints,
             }
         )
 
@@ -84,10 +85,10 @@ def main(
         if not config.use_existing_framework:
             framework_generator.setup_framework()
             framework_generator.create_env_file(api_definitions[0])
-
+            
         framework_generator.generate(api_definitions, config.generate)
         framework_generator.run_final_checks(config.generate)
-
+        
         checkpoint.clear()
 
         logger.info("\n✅ Framework generation completed successfully!")

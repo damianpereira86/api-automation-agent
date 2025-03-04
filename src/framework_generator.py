@@ -1,5 +1,6 @@
 import signal
 import sys
+import json 
 from typing import List, Dict, Any, Optional
 
 from .ai_tools.models.file_spec import FileSpec
@@ -69,9 +70,32 @@ class FrameworkGenerator:
             self.logger.info(
                 f"\nProcessing API definition from {self.config.api_file_path}"
             )
-            return self.swagger_processor.process_api_definition(
+            
+            api_definition = self.swagger_processor.process_api_definition(
                 self.config.api_file_path
             )
+            
+            args = self.config
+            
+            if args.list_endpoints:
+                endpoints_dict = {}
+                
+                for endpoint in api_definition:
+                    if endpoint["type"] == "verb":
+                        if endpoint["path"] not in endpoints_dict:
+                            endpoints_dict[endpoint["path"]] = [] 
+                        endpoints_dict[endpoint["path"]].append(endpoint["verb"])
+                
+                for path, verbs in endpoints_dict.items():
+                    print(f"- {path}")
+                    print(f"  Verbs: {verbs}")
+                    print()  
+
+                input("Press Enter to continue...")
+            
+     
+            return api_definition
+        
         except Exception as e:
             self._log_error("Error processing API definition", e)
             raise
@@ -182,7 +206,6 @@ class FrameworkGenerator:
         """Check if an endpoint should be processed based on configuration"""
         if self.config.endpoints is None:
             return True
-
         return any(path.startswith(endpoint) for endpoint in self.config.endpoints)
 
     @Checkpoint.checkpoint("generate_models")

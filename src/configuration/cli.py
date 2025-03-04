@@ -33,4 +33,11 @@ class CLIArgumentParser:
             action="store_true",
             help="Use an existing framework instead of creating a new one.",
         )
+        
+        parser.add_argument(
+            "--list-endpoints",
+            help="List all the endpoints in the API definition file.",
+            action="store_true",
+        )
+        
         return parser.parse_args()

@@ -71,31 +71,10 @@ class FrameworkGenerator:
                 f"\nProcessing API definition from {self.config.api_file_path}"
             )
             
-            api_definition = self.swagger_processor.process_api_definition(
+            return self.swagger_processor.process_api_definition(
                 self.config.api_file_path
             )
             
-            args = self.config
-            
-            if args.list_endpoints:
-                endpoints_dict = {}
-                
-                for endpoint in api_definition:
-                    if endpoint["type"] == "verb":
-                        if endpoint["path"] not in endpoints_dict:
-                            endpoints_dict[endpoint["path"]] = [] 
-                        endpoints_dict[endpoint["path"]].append(endpoint["verb"])
-                
-                for path, verbs in endpoints_dict.items():
-                    print(f"- {path}")
-                    print(f"  Verbs: {verbs}")
-                    print()  
-
-                input("Press Enter to continue...")
-            
-     
-            return api_definition
-        
         except Exception as e:
             self._log_error("Error processing API definition", e)
             raise
@@ -112,7 +91,23 @@ class FrameworkGenerator:
         except Exception as e:
             self._log_error("Error setting up framework", e)
             raise
+        
+    def list_endpoints(self, api_definition):
+                endpoints_dict = {}
+                
+                for endpoint in api_definition:
+                    if endpoint["type"] == "verb":
+                        if endpoint["path"] not in endpoints_dict:
+                            endpoints_dict[endpoint["path"]] = [] 
+                        endpoints_dict[endpoint["path"]].append(endpoint["verb"])
+                
+                for path, verbs in endpoints_dict.items():
+                    print(f"- {path}")
+                    print(f"  Verbs: {verbs}")
+                    print()
 
+                input("Press Enter to continue...")
+                
     @Checkpoint.checkpoint()
     def create_env_file(self, api_definition):
         """Generate the .env file from the provided API definition"""

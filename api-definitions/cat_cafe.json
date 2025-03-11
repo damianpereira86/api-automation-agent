@@ -1,0 +1,1101 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Cat Café API",
+    "version": "1.0.0",
+    "description": "API for managing cats, adopters and the staff at a cat café"
+  },
+  "host": "localhost:3000",
+  "components": {
+    "schemas": {
+      "Cat": {
+        "type": "object",
+        "required": [
+          "name",
+          "age",
+          "breed",
+          "dateJoined",
+          "vaccinated",
+          "temperament",
+          "staffInCharge",
+          "isAdopted"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The cat ID",
+            "example": 1
+          },
+          "name": {
+            "type": "string",
+            "description": "The cat name",
+            "example": "Whiskers"
+          },
+          "age": {
+            "type": "integer",
+            "description": "The cat age in years",
+            "example": 3
+          },
+          "breed": {
+            "type": "string",
+            "description": "The cat breed",
+            "example": "Persian"
+          },
+          "dateJoined": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the cat joined the café"
+          },
+          "vaccinated": {
+            "type": "boolean",
+            "description": "Whether the cat is vaccinated"
+          },
+          "temperament": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Calm",
+                "Curious",
+                "Playful",
+                "Affectionate",
+                "Independent",
+                "Shy",
+                "Dominant",
+                "Easygoing",
+                "Aggressive",
+                "Nervous",
+                "Social"
+              ]
+            },
+            "description": "The cat temperament traits"
+          },
+          "staffInCharge": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The UID of the staff member in charge of the cat",
+            "example": "00000000-0000-0000-0000-000000000000"
+          },
+          "isAdopted": {
+            "type": "boolean",
+            "description": "Whether the cat was adopted or not"
+          },
+          "adopterId": {
+            "type": "integer",
+            "description": "The ID of the adopter of the cat",
+            "example": 11111111
+          }
+        }
+      },
+      "CatWithoutID": {
+        "type": "object",
+        "required": [
+          "name",
+          "age",
+          "breed",
+          "dateJoined",
+          "vaccinated",
+          "temperament",
+          "staffInCharge",
+          "isAdopted"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "description": "The cat name",
+            "example": "Whiskers"
+          },
+          "age": {
+            "type": "integer",
+            "description": "The cat age in years",
+            "example": 3
+          },
+          "breed": {
+            "type": "string",
+            "description": "The cat breed",
+            "example": "Persian"
+          },
+          "dateJoined": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the cat joined the café"
+          },
+          "vaccinated": {
+            "type": "boolean",
+            "description": "Whether the cat is vaccinated"
+          },
+          "temperament": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "Calm",
+                "Curious",
+                "Playful",
+                "Affectionate",
+                "Independent",
+                "Shy",
+                "Dominant",
+                "Easygoing",
+                "Aggressive",
+                "Nervous",
+                "Social"
+              ]
+            },
+            "description": "The cat temperament traits"
+          },
+          "staffInCharge": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The UID of the staff member in charge of the cat",
+            "example": "00000000-0000-0000-0000-000000000000"
+          },
+          "isAdopted": {
+            "type": "boolean",
+            "description": "Whether the cat was adopted or not"
+          },
+          "adopterId": {
+            "type": "integer",
+            "description": "The ID of the adopter of the cat",
+            "example": 11111111
+          }
+        }
+      },
+      "Staff": {
+        "type": "object",
+        "required": [
+          "name",
+          "lastName",
+          "age",
+          "dateJoined",
+          "role"
+        ],
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "The staff member ID"
+          },
+          "name": {
+            "type": "string",
+            "description": "First name"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Last name"
+          },
+          "age": {
+            "type": "integer",
+            "description": "Age in years"
+          },
+          "dateJoined": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date the staff member joined"
+          },
+          "role": {
+            "type": "string",
+            "description": "The staff member role"
+          }
+        }
+      },
+      "Adopter": {
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "lastName",
+          "dateOfBirth",
+          "phone",
+          "address"
+        ],
+        "properties": {
+          "id": {
+            "type": "integer",
+            "description": "The adopter ID, without dots and hyphen",
+            "example": 11111111
+          },
+          "name": {
+            "type": "string",
+            "description": "First name"
+          },
+          "lastName": {
+            "type": "string",
+            "description": "Last name"
+          },
+          "dateOfBirth": {
+            "type": "string",
+            "format": "date-time",
+            "description": "The date of birth of the adopter"
+          },
+          "role": {
+            "type": "integer",
+            "description": "The adopter phone number"
+          },
+          "address": {
+            "type": "string",
+            "description": "The adopter address"
+          }
+        }
+      },
+      "Error": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "basicAuth": {
+        "type": "http",
+        "scheme": "basic"
+      }
+    }
+  },
+  "paths": {
+    "/api/adopters/{id}": {
+      "get": {
+        "tags": [
+          "Adopters"
+        ],
+        "summary": "Get an adopter by ID",
+        "description": "Retrieve a single adopter by their ID",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The adopter ID"
+          },
+          {
+            "in": "query",
+            "name": "includeCats",
+            "schema": {
+              "type": "boolean"
+            },
+            "required": false,
+            "description": "Set to `true` to include the list of cats they have adopted."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Adopter found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Adopter"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Adopter not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Adopters"
+        ],
+        "summary": "Delete an Adopter",
+        "description": "Remove an Adopter from the café's DB",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The ID of the Adopter to remove"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Adopter deleted successfully"
+          },
+          "400": {
+            "description": "The Adopter already made an adoption and their data is needed on the system"
+          },
+          "404": {
+            "description": "Adopter not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/adopters": {
+      "get": {
+        "tags": [
+          "Adopters"
+        ],
+        "summary": "Get all the Adopters",
+        "description": "Retrieve all the adopters in the café",
+        "responses": {
+          "200": {
+            "description": "List of adopters",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Staff"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Non Staff found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Adopters"
+        ],
+        "summary": "Add a new adopter",
+        "description": "Add a new cat adopter",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "integer",
+                    "description": "ID of the adopter, without dots and hyphen."
+                  },
+                  "name": {
+                    "type": "string",
+                    "description": "First name."
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "description": "Last name."
+                  },
+                  "dateOfBirth": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date of birth of the adopter."
+                  },
+                  "phone": {
+                    "type": "string",
+                    "description": "Phone number."
+                  },
+                  "address": {
+                    "type": "string",
+                    "description": "The adopters address."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Adopter created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Adopter"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cats": {
+      "get": {
+        "tags": [
+          "Cats"
+        ],
+        "summary": "Get all cats",
+        "description": "Retrieve a list of all cats in the café",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "temperaments",
+            "schema": {
+              "type": "string"
+            },
+            "required": false,
+            "description": "Include the temperaments that the cat you are looking for must have, separeted by '|'"
+          },
+          {
+            "in": "query",
+            "name": "isAdopted",
+            "schema": {
+              "type": "boolean"
+            },
+            "required": false,
+            "description": "Set to `true` to include the list of cats that were adopted"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of cats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/Cat"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Cats"
+        ],
+        "summary": "Add a new cat",
+        "description": "Add a new cat to the café",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatWithoutID"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Cat created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Staff or Adopter not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/cats/{id}": {
+      "get": {
+        "tags": [
+          "Cats"
+        ],
+        "summary": "Get a cat by ID",
+        "description": "Retrieve a single cat by its ID",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The cat ID"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Cat found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cat"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Cat not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Cats"
+        ],
+        "summary": "Update a cat",
+        "description": "Update a cat's information",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The cat ID"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CatWithoutID"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Cat updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cat"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Cat, Staff or Adopter not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Cats"
+        ],
+        "summary": "Update a cat's staff in charge or Adopt the cat",
+        "description": "Update the `staffInCharge` attribute of a cat or provide an `adopterId` in case of adoption",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The ID of the cat whose staff in charge is being updated"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "staffInCharge": {
+                    "type": "string",
+                    "format": "uuid",
+                    "description": "The UUID of the new staff member responsible for the cat."
+                  },
+                  "adopterId": {
+                    "type": "integer",
+                    "description": "The ID of the adopter of the cat.",
+                    "example": 11111111
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Staff in charge updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Cat"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Cat, Staff or Adopter not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Cats"
+        ],
+        "summary": "Delete a cat",
+        "description": "Remove a cat from the café",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "integer"
+            },
+            "description": "The cat ID"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Cat deleted successfully"
+          },
+          "404": {
+            "description": "Cat not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff/{id}": {
+      "get": {
+        "tags": [
+          "Staff"
+        ],
+        "summary": "Get a staff member by ID",
+        "description": "Retrieve a single staff member by their ID",
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "description": "The staff member ID"
+          },
+          {
+            "in": "query",
+            "name": "includeCats",
+            "schema": {
+              "type": "boolean"
+            },
+            "required": false,
+            "description": "Set to `true` to include the list of cats they are in charge of."
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Staff member found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Staff"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Staff member not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "Staff"
+        ],
+        "summary": "Delete a Staff member",
+        "description": "Remove a Staff member from the café",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The UUID of the Staff member"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Staff deleted successfully"
+          },
+          "400": {
+            "description": "The Staff member has cats in charge and can not be removed until they have none"
+          },
+          "404": {
+            "description": "Staff not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/staff": {
+      "get": {
+        "tags": [
+          "Staff"
+        ],
+        "summary": "Get all the staff members",
+        "description": "Retrieve all the staff",
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A list of Staff",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Staff"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Non Staff found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Staff"
+        ],
+        "summary": "Add a new staff member",
+        "description": "Add a new staff member to the café",
+        "security": [
+          {
+            "basicAuth": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "description": "First name."
+                  },
+                  "lastName": {
+                    "type": "string",
+                    "description": "Last name."
+                  },
+                  "age": {
+                    "type": "integer",
+                    "description": "Age in years."
+                  },
+                  "dateJoined": {
+                    "type": "string",
+                    "format": "date-time",
+                    "description": "The date the staff member joined."
+                  },
+                  "role": {
+                    "type": "string",
+                    "description": "The staff member role."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Staff member created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Staff"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "tags": []
+}

@@ -45,25 +45,27 @@ An open-source AI Agent that automatically generates an automation framework fro
 This project supports both Anthropic and OpenAI language models:
 
 ### Default Model
-**Claude 3.5 Sonnet** (claude-3-5-sonnet-20241022) is the default and recommended model
+**Claude 3.7 Sonnet** (claude-3-7-sonnet-latest) is the default and recommended model
 - Provides superior code generation and understanding
 - Offers the best balance of performance and cost
 
 ### Supported Models
 **Anthropic**
-  - Claude 3.5 Sonnet (claude-3-5-sonnet-20241022)
+  - Claude 3.7 Sonnet (claude-3-7-sonnet-latest)
+  - Claude 3.5 Sonnet (claude-3-5-sonnet-latest)
+  - Claude 3.5 Haiku (claude-3-5-haiku-latest)
 
 **OpenAI**
   - GPT-4o (gpt-4o)
   - GPT-4o Mini (gpt-4o-mini)
   - GPT-4 Turbo (gpt-4-turbo)
-  - GPT-3.5 Turbo (gpt-3.5-turbo)
   - O1 Preview (o1-preview)
   - O1 Mini (o1-mini)
+  - O3 Mini (o3-mini)
 
 You can configure your preferred model in the `.env` file:
 ```env
-MODEL=claude-3-5-sonnet-20241022  # Default value
+MODEL=o3-mini
 ```
 
 ## Usage

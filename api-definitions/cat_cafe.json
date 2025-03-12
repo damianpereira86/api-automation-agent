@@ -5,7 +5,6 @@
     "version": "1.0.0",
     "description": "API for managing cats, adopters and the staff at a cat café"
   },
-  "host": "localhost:3000",
   "components": {
     "schemas": {
       "Cat": {
@@ -362,7 +361,7 @@
         }
       }
     },
-    "/api/adopters": {
+    "/api/Adopters": {
       "get": {
         "tags": [
           "Adopters"

@@ -20,6 +20,7 @@ Your task is to create API automation test code based on an OpenAPI definition u
 - Use optional chaining (?.) in the test assertions or any place where object properties might be undefined (e.g., response.data?.id.should.equal(orderId);) to avoid potential undefined errors.
 - Create any other required model by the test that is not included in the Models section.
 - Include ".js" in the import statements.
+- Ensure that the test file start with the verb to avoid overriding specs (e.g. `Get-ForgotPassword.spec.ts` or `Post-ForgotPassword.spec.ts`)
 - You will be penalized for every TS or ESLint error.
 
 ## Output

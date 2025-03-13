@@ -13,6 +13,7 @@ from src.container import Container
 from src.framework_generator import FrameworkGenerator
 from src.utils.checkpoint import Checkpoint
 from src.utils.logger import Logger
+from src.processors.swagger.endpoint_lister import EndpointLister
 
 
 @inject
@@ -82,16 +83,16 @@ def main(
 
         api_definitions = framework_generator.process_api_definition()
 
-        if config.list_endpoints:      
-            framework_generator.list_endpoints(api_definitions)
-        
+        if config.list_endpoints:
+            EndpointLister.list_endpoints(api_definitions)
+
         if not config.use_existing_framework:
             framework_generator.setup_framework()
             framework_generator.create_env_file(api_definitions[0])
-            
+
         framework_generator.generate(api_definitions, config.generate)
         framework_generator.run_final_checks(config.generate)
-        
+
         checkpoint.clear()
 
         logger.info("\n✅ Framework generation completed successfully!")

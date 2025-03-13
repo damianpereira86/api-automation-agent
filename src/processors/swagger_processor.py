@@ -39,7 +39,7 @@ class SwaggerProcessor:
             List of merged API definitions.
         """
         try:
-            self.logger.info(f"Starting API processing")
+            self.logger.info("Starting API processing")
             raw_definition = self.file_loader.load(api_file_path)
             split_definitions = self.splitter.split(raw_definition)
             merged_definitions = self.merger.merge(split_definitions)
@@ -49,7 +49,7 @@ class SwaggerProcessor:
                 self.logger.debug(f"Path: {definition['path']}")
                 self.logger.debug(f"Verb: {definition['verb']}")
 
-            self.logger.info(f"Successfully processed API definition.")
+            self.logger.info("Successfully processed API definition.")
             return merged_definitions
         except Exception as e:
             self.logger.error(f"Error processing API definition: {e}")

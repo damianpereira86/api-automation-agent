@@ -28,9 +28,7 @@ class APIDefinitionMerger:
                     for path, path_data in item_yaml["paths"].items():
                         if path not in merged_yaml["paths"]:
                             merged_yaml["paths"].update({path: path_data})
-                    merged_definitions[base_path]["yaml"] = yaml.dump(
-                        merged_yaml, sort_keys=False
-                    )
+                    merged_definitions[base_path]["yaml"] = yaml.dump(merged_yaml, sort_keys=False)
             elif item["type"] == "verb":
                 merged_definitions[f"{item['path']}-{item['verb']}"] = copy.deepcopy(item)
 

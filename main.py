@@ -1,8 +1,6 @@
 import logging
 import os
 import traceback
-import requests
-import json
 
 from dependency_injector.wiring import inject, Provide
 from dotenv import load_dotenv
@@ -15,6 +13,7 @@ from src.container import Container
 from src.framework_generator import FrameworkGenerator
 from src.utils.checkpoint import Checkpoint
 from src.utils.logger import Logger
+from src.processors.swagger.swagger_url import SwaggerURLProcessor
 
 
 @inject
@@ -54,29 +53,9 @@ def main(
             raise ValueError(
                 "The destination folder parameter must be set when using an existing framework."
             )
-            
-        def swaggerURL(path: str) -> str:
-            if path.startswith("https") and path.endswith(".json"):
-                response = requests.get(path)
-                if response.status_code == 200:
-                    swagger_data = response.json()
-                    dest_folder = "api-definitions"
-                    os.makedirs(dest_folder, exist_ok=True)
-                    api_definitions_name = swagger_data.get("info", {}).get("title", "api_definitions").replace(" ", "-").lower()
-                    file_path = os.path.join(dest_folder, api_definitions_name + ".json")
-                    with open(file_path, "w", encoding="utf-8") as json_file:
-                        json.dump(swagger_data, json_file, indent=4)
-                    return file_path
-                else:
-                    raise Exception(f"Error fetching Swagger JSON: {response.status_code}")
-            else:
-                return path
-
-            
-
         config.update(
             {
-                "api_file_path": swaggerURL(args.api_file_path),
+                "api_file_path": SwaggerURLProcessor.swaggerURL(args.api_file_path),
                 "destination_folder": args.destination_folder
                 or config.destination_folder,
                 "endpoints": args.endpoints,
@@ -99,8 +78,7 @@ def main(
             checkpoint.save_last_namespace()
         else:
             framework_generator.restore_state(last_namespace)
-        
-        
+
         api_definitions = framework_generator.process_api_definition()
 
         if not config.use_existing_framework:

@@ -8,9 +8,13 @@ class Model(Enum):
     O1_MINI = "o1-mini"
     O3_MINI = "o3-mini"
     GPT_4_TURBO = "gpt-4-turbo"
-    GPT_3_5_TURBO = "gpt-3.5-turbo"
-    CLAUDE_SONNET = "claude-3-5-sonnet-20241022"
-    CLAUDE_HAIKU = "claude-3-5-haiku-20241022"
+    CLAUDE_SONNET_3_5 = "claude-3-5-sonnet-latest"
+    CLAUDE_SONNET_3_7 = "claude-3-7-sonnet-latest"
+    CLAUDE_HAIKU_3_5 = "claude-3-5-haiku-latest"
 
     def is_anthropic(self):
-        return self in [Model.CLAUDE_HAIKU, Model.CLAUDE_SONNET]
+        return self in [
+            Model.CLAUDE_HAIKU_3_5,
+            Model.CLAUDE_SONNET_3_5,
+            Model.CLAUDE_SONNET_3_7,
+        ]

@@ -143,6 +143,8 @@ You can combine endpoints to test larger scenarios.:
 python ./main.py api-definitions/petstore-swagger-store.json --endpoints /store /pet
 ```
 
+In addition, you can find in the api-definitions folder the cat_cafe.json file, that documents the [CatCafe](https://github.com/CodingRainbowCat/CatCafeProject) API. This is a test API that was created epecifically for testing the agent. You can run it locally and modify as desired to test different scenarios.
+
 ## Contributing
 
 Contributions are welcome! Here's how you can help:

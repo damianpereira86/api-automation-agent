@@ -13,6 +13,7 @@ from src.container import Container
 from src.framework_generator import FrameworkGenerator
 from src.utils.checkpoint import Checkpoint
 from src.utils.logger import Logger
+from src.processors.swagger.swagger_url import SwaggerURLProcessor
 
 
 @inject
@@ -52,10 +53,9 @@ def main(
             raise ValueError(
                 "The destination folder parameter must be set when using an existing framework."
             )
-
         config.update(
             {
-                "api_file_path": args.api_file_path,
+                "api_file_path": SwaggerURLProcessor.swaggerURL(args.api_file_path),
                 "destination_folder": args.destination_folder
                 or config.destination_folder,
                 "endpoints": args.endpoints,

@@ -1,5 +1,6 @@
 import signal
 import sys
+import json
 from typing import List, Dict, Any, Optional
 
 from .ai_tools.models.file_spec import FileSpec
@@ -69,9 +70,11 @@ class FrameworkGenerator:
             self.logger.info(
                 f"\nProcessing API definition from {self.config.api_file_path}"
             )
+
             return self.swagger_processor.process_api_definition(
                 self.config.api_file_path
             )
+
         except Exception as e:
             self._log_error("Error processing API definition", e)
             raise
@@ -88,6 +91,19 @@ class FrameworkGenerator:
         except Exception as e:
             self._log_error("Error setting up framework", e)
             raise
+
+    def list_endpoints(self, api_definition):
+        endpoints_dict = {}
+
+        for endpoint in api_definition:
+            if endpoint["type"] == "verb":
+                if endpoint["path"] not in endpoints_dict:
+                    endpoints_dict[endpoint["path"]] = []
+                endpoints_dict[endpoint["path"]].append(endpoint["verb"])
+
+        for path, verbs in endpoints_dict.items():
+            print(f"- {path} Verbs: {verbs}")
+            input("Press Enter to continue...")
 
     @Checkpoint.checkpoint()
     def create_env_file(self, api_definition):
@@ -188,7 +204,6 @@ class FrameworkGenerator:
         """Check if an endpoint should be processed based on configuration"""
         if self.config.endpoints is None:
             return True
-
         return any(path.startswith(endpoint) for endpoint in self.config.endpoints)
 
     @Checkpoint.checkpoint("generate_models")

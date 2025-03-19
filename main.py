@@ -13,6 +13,7 @@ from src.container import Container
 from src.framework_generator import FrameworkGenerator
 from src.utils.checkpoint import Checkpoint
 from src.utils.logger import Logger
+from src.processors.swagger.endpoint_lister import EndpointLister
 
 
 @inject
@@ -61,6 +62,7 @@ def main(
                 "endpoints": args.endpoints,
                 "generate": GenerationOptions(args.generate),
                 "use_existing_framework": args.use_existing_framework,
+                "list_endpoints": args.list_endpoints,
             }
         )
 
@@ -80,6 +82,9 @@ def main(
             framework_generator.restore_state(last_namespace)
 
         api_definitions = framework_generator.process_api_definition()
+
+        if config.list_endpoints:
+            EndpointLister.list_endpoints(api_definitions)
 
         if not config.use_existing_framework:
             framework_generator.setup_framework()

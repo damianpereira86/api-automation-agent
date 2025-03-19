@@ -86,7 +86,6 @@ python ./main.py path/to/your/openapi.yaml
 
 ### Options
 
-- `--list-endpoints`: List the endpoints of swagger.
 - `--destination-folder`: Specify output directory (default: ./generated-framework\_[timestamp])
 - `--use-existing-framework`: Use an existing framework instead of creating a new one
 - `--endpoints`: Generate framework for specific endpoints (can specify multiple)
@@ -94,6 +93,7 @@ python ./main.py path/to/your/openapi.yaml
   - `models`: Generate only the data models
   - `models_and_first_test`: Generate data models and the first test for each endpoint
   - `models_and_tests`: Generate data models and complete test suites
+- `--list-endpoints`: List the endpoints that can be used with the --endpoints flag.
 
 ### Examples
 

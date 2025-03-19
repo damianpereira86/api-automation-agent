@@ -110,7 +110,12 @@ class FrameworkGenerator:
         """Generate the .env file from the provided API definition"""
         try:
             self.logger.info("\nGenerating .env file")
-            self.llm_service.generate_dot_env(api_definition)
+            # Create a copy without paths
+            env_definition = api_definition.copy()
+            env_definition.pop(
+                "paths", None
+            )  # None as default in case paths key doesn't exist
+            self.llm_service.generate_dot_env(env_definition)
         except Exception as e:
             self._log_error("Error creating .env file", e)
             raise
@@ -166,7 +171,8 @@ class FrameworkGenerator:
                     )
 
             self.logger.info(
-                f"\nGeneration complete. {self.models_count} models and {self.test_files_count} tests were generated."
+                f"\nGeneration complete. "
+                f"{self.models_count} models and {self.test_files_count} tests were generated."
             )
         except Exception as e:
             self._log_error("Error processing definitions", e)
@@ -293,7 +299,8 @@ class FrameworkGenerator:
         """Generate additional tests based on the initial test and models"""
         try:
             self.logger.info(
-                f"\nGenerating additional tests for path: {api_definition['path']} and verb: {api_definition['verb']}"
+                f"\nGenerating additional tests for path: {api_definition['path']} "
+                f"and verb: {api_definition['verb']}"
             )
             additional_tests = self.llm_service.generate_additional_tests(
                 tests, models, api_definition["yaml"]

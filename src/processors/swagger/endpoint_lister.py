@@ -1,6 +1,3 @@
-import sys
-
-
 class EndpointLister:
     """
     Utility class for listing API endpoints.
@@ -19,4 +16,3 @@ class EndpointLister:
         for path in sorted(endpoints_dict):
             message = f"- {path}"
             print(message)
-        sys.exit(0)

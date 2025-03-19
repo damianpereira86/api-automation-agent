@@ -124,16 +124,12 @@ class LLMService:
             all_tools = tools or []
 
             llm = self._select_language_model(language_model)
-            prompt_template = ChatPromptTemplate.from_template(
-                self._load_prompt(prompt_path)
-            )
+            prompt_template = ChatPromptTemplate.from_template(self._load_prompt(prompt_path))
 
             converted_tools = [convert_tool_for_model(tool, llm) for tool in all_tools]
 
             if tool_to_use:
-                llm_with_tools = llm.bind_tools(
-                    converted_tools, tool_choice=tool_to_use
-                )
+                llm_with_tools = llm.bind_tools(converted_tools, tool_choice=tool_to_use)
             else:
                 llm_with_tools = llm.bind_tools(converted_tools)
 
@@ -169,9 +165,7 @@ class LLMService:
         return json.loads(
             self.create_ai_chain(
                 PromptConfig.MODELS,
-                tools=[
-                    FileCreationTool(self.config, self.file_service, are_models=True)
-                ],
+                tools=[FileCreationTool(self.config, self.file_service, are_models=True)],
             ).invoke({"api_definition": api_definition})
         )
 
@@ -192,7 +186,7 @@ class LLMService:
         available_models: List[Dict[str, Any]],
     ):
         """Trigger read file tool to decide what additional model info is needed"""
-        self.logger.info(f"\nGetting additional models...")
+        self.logger.info("\nGetting additional models...")
         return self.create_ai_chain(
             PromptConfig.ADD_INFO,
             tools=[FileReadingTool(self.config, self.file_service)],
@@ -239,7 +233,5 @@ class LLMService:
 
         self.create_ai_chain(
             PromptConfig.FIX_TYPESCRIPT,
-            tools=[
-                FileCreationTool(self.config, self.file_service, are_models=are_models)
-            ],
+            tools=[FileCreationTool(self.config, self.file_service, are_models=are_models)],
         ).invoke({"files": files, "messages": messages})

@@ -88,6 +88,7 @@ class FrameworkGenerator:
         """Generate the .env file from the provided API definition"""
         try:
             self.logger.info("\nGenerating .env file")
+            
             # Remove paths from the API definition
             api_definition_str = api_definition["yaml"]
 
@@ -183,7 +184,6 @@ class FrameworkGenerator:
         """Check if an endpoint should be processed based on configuration"""
         if self.config.endpoints is None:
             return True
-
         return any(path.startswith(endpoint) for endpoint in self.config.endpoints)
 
     def _generate_models(self, api_definition: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:

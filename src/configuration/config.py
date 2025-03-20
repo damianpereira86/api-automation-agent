@@ -29,6 +29,7 @@ class Config:
     destination_folder: str = ""
     endpoints: Optional[List[str]] = None
     use_existing_framework: bool = False
+    list_endpoints: bool = False
 
     def update(self, updates: dict[str, Any]):
         for key, value in updates.items():

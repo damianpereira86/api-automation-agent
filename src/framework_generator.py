@@ -1,5 +1,7 @@
+import json
 import signal
 import sys
+import yaml
 from typing import List, Dict, Any, Optional
 
 from .ai_tools.models.file_spec import FileSpec
@@ -86,9 +88,6 @@ class FrameworkGenerator:
         """Generate the .env file from the provided API definition"""
         try:
             self.logger.info("\nGenerating .env file")
-            import yaml
-            import json
-
             # Remove paths from the API definition
             api_definition_str = api_definition["yaml"]
 

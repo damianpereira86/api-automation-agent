@@ -79,6 +79,7 @@ def main(
 
         if config.list_endpoints:
             EndpointLister.list_endpoints(api_definitions)
+            logger.info("\n✅ Endpoint listing completed successfully!")
         else:
             if not config.use_existing_framework:
                 framework_generator.setup_framework()

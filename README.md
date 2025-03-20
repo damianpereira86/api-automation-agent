@@ -81,8 +81,12 @@ MODEL=o3-mini
 Run the agent using the following command:
 
 ```bash
-python ./main.py path/to/your/openapi.yaml
+python ./main.py <path_or_url_to_openapi_definition>
 ```
+
+The agent accepts either:
+- A local file path to your OpenAPI/Swagger specification
+- A URL to a JSON or YAML OpenAPI/Swagger specification
 
 ### Options
 
@@ -98,13 +102,23 @@ python ./main.py path/to/your/openapi.yaml
 ### Examples
 
 ```bash
+# Generate framework from a local file
+python ./main.py api-spec.yaml
+```
+
+```bash
+# Generate framework from a URL
+python ./main.py https://api.example.com/swagger.json
+```
+
+```bash
 # Generate list root endpoints
 python ./main.py api-spec.yaml --list-endpoints
 ```
 
 ```bash
 # Generate complete framework with all endpoints
-python ./main.py api-spec.yaml --destination-folder ./my-api-framework
+python ./main.py api-spec.yaml
 ```
 
 ```bash
@@ -142,25 +156,40 @@ generated-framework_[timestamp]/    # Or the Destination Folder selected
 
 ## Testing the Agent
 
-To try out the agent without using your own API specification, you can use the sample API definition provided in the `api-definitions` folder. They are derived from the Pet Store API described in https://petstore.swagger.io/#/
+To try out the agent without using your own API specification, you can use one of the following test APIs: 
+- [CatCafe API](https://github.com/CodingRainbowCat/CatCafeProject): Test API created by [@CodingRainbowCat](https://github.com/CodingRainbowCat) epecifically for testing the agent. You can check the repo to run it locally. It's very useful since it can be easily modified to test different scenarios.
+- [Pet Store API](https://petstore.swagger.io/#/): Public test API
 
-1. Start with the `petstore-swagger-store.json` definition and the Store endpoints (recommended for testing and debugging because of its size):
+### Examples
+
+**Cat Cafe**  
 
 ```bash
-python ./main.py api-definitions/petstore-swagger-store.json --endpoints /store
+# /adopters endpoints 
+python ./main.py http://localhost:3000/swagger.json --endpoints /adopters
 ```
 
-This is a simple and small API specification that includes basic CRUD operations and is ideal for testing the agent's capabilities.
+**Pet Store**  
 
-Estimated cost to run Store example: US$ ~0.1
+```bash
+# /store endpoints
+python ./main.py https://petstore.swagger.io/v2/swagger.json --endpoints /store
+```
+
+These are simple and small examples that includes basic CRUD operations and are ideal for testing the agent's capabilities.
+Estimated cost (with claude-3-7-sonnet-latest) to run each example above: US$ ~0.1  
 
 You can combine endpoints to test larger scenarios.:
 
 ```bash
-python ./main.py api-definitions/petstore-swagger-store.json --endpoints /store /pet
+python ./main.py http://localhost:3000/swagger.json --endpoints /adopters /pet
 ```
 
-In addition, you can find in the api-definitions folder the cat_cafe.json file, that documents the [CatCafe](https://github.com/CodingRainbowCat/CatCafeProject) API. This is a test API that was created epecifically for testing the agent. You can run it locally and modify as desired to test different scenarios.
+Or simply run it for the whole API
+
+```bash
+python ./main.py http://localhost:3000/swagger.json
+```
 
 ## Contributing
 
@@ -252,4 +281,5 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Acknowledgments
 
 - OpenAI and Anthropic for their AI models
-- The Endava Testing Discipline for inspiration and support
+- All contributors who have helped build and improve this project
+

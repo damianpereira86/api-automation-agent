@@ -48,11 +48,13 @@ class SwaggerProcessor:
         """
         try:
             self.logger.info("Starting API processing")
+
             swagger_spec = self.getSwaggerData.getApiSpecification(api_file_path)
             if isinstance(swagger_spec, dict):
                 raw_definition = swagger_spec
             else:
                 raw_definition = self.file_loader.load(swagger_spec)
+
             split_definitions = self.splitter.split(raw_definition)
             merged_definitions = self.merger.merge(split_definitions)
             for definition in merged_definitions:
@@ -60,7 +62,7 @@ class SwaggerProcessor:
                 self.logger.debug(f"Path: {definition['path']}")
                 self.logger.debug(f"Verb: {definition['verb']}")
 
-            self.logger.info(f"Successfully processed API definition.")
+            self.logger.info("Successfully processed API definition.")
             return merged_definitions
         except Exception as e:
             self.logger.error(f"Error processing API definition: {e}")

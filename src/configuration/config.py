@@ -21,7 +21,7 @@ class Config:
     env: Envs = Envs.DEV
     debug: bool = False
     langchain_debug: bool = False
-    model: Model = Model.CLAUDE_SONNET
+    model: Model = Model.CLAUDE_SONNET_3_7
     generate: GenerationOptions = GenerationOptions.MODELS_AND_TESTS
     anthropic_api_key: str = ""
     openai_api_key: str = ""
@@ -29,6 +29,7 @@ class Config:
     destination_folder: str = ""
     endpoints: Optional[List[str]] = None
     use_existing_framework: bool = False
+    list_endpoints: bool = False
 
     def update(self, updates: dict[str, Any]):
         for key, value in updates.items():

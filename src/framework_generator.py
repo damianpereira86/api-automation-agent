@@ -66,8 +66,8 @@ class FrameworkGenerator:
     def process_api_definition(self) -> List[Dict[str, Any]]:
         """Process the API definition file and return a list of API endpoints"""
         try:
-            self.logger.info(f"\nProcessing API definition from {self.config.api_file_path}")
-            return self.swagger_processor.process_api_definition(self.config.api_file_path)
+            self.logger.info(f"\nProcessing API definition from {self.config.api_definition}")
+            return self.swagger_processor.process_api_definition(self.config.api_definition)
         except Exception as e:
             self._log_error("Error processing API definition", e)
             raise
@@ -88,7 +88,7 @@ class FrameworkGenerator:
         """Generate the .env file from the provided API definition"""
         try:
             self.logger.info("\nGenerating .env file")
-            
+
             # Remove paths from the API definition
             api_definition_str = api_definition["yaml"]
 

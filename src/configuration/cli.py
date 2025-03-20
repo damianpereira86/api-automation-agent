@@ -6,7 +6,10 @@ class CLIArgumentParser:
     @staticmethod
     def parse_arguments():
         parser = argparse.ArgumentParser(description="API Framework Generation Tool")
-        parser.add_argument("api_file_path", help="The path of the OpenAPI definition file to process.")
+        parser.add_argument(
+            "api_definition",
+            help="The path of the API definition file or the URL to the API definition.",
+        )
         parser.add_argument(
             "--destination-folder",
             type=str,

@@ -52,7 +52,7 @@ def main(
 
         config.update(
             {
-                "api_file_path": args.api_file_path,
+                "api_definition": args.api_definition,
                 "destination_folder": args.destination_folder or config.destination_folder,
                 "endpoints": args.endpoints,
                 "generate": GenerationOptions(args.generate),
@@ -61,7 +61,7 @@ def main(
             }
         )
 
-        logger.info(f"\nAPI file path: {config.api_file_path}")
+        logger.info(f"\nAPI definition: {config.api_definition}")
         logger.info(f"Destination folder: {config.destination_folder}")
         logger.info(f"Use existing framework: {config.use_existing_framework}")
         logger.info(f"Endpoints: {', '.join(config.endpoints) if config.endpoints else 'All'}")

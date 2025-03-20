@@ -3,7 +3,8 @@
   "info": {
     "title": "Cat Café API",
     "version": "1.0.0",
-    "description": "API for managing cats, adopters and the staff at a cat café"
+    "description": "API for managing cats, adopters and the staff at a cat café",
+    "host": "localhost:3000"
   },
   "components": {
     "schemas": {
@@ -361,7 +362,7 @@
         }
       }
     },
-    "/api/Adopters": {
+    "/api/adopters": {
       "get": {
         "tags": [
           "Adopters"
@@ -414,10 +415,6 @@
               "schema": {
                 "type": "object",
                 "properties": {
-                  "id": {
-                    "type": "integer",
-                    "description": "ID of the adopter, without dots and hyphen."
-                  },
                   "name": {
                     "type": "string",
                     "description": "First name."

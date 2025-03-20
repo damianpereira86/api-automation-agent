@@ -1,5 +1,7 @@
+import json
 import signal
 import sys
+import yaml
 from typing import List, Dict, Any, Optional
 
 from .ai_tools.models.file_spec import FileSpec
@@ -65,9 +67,7 @@ class FrameworkGenerator:
         """Process the API definition file and return a list of API endpoints"""
         try:
             self.logger.info(f"\nProcessing API definition from {self.config.api_file_path}")
-
             return self.swagger_processor.process_api_definition(self.config.api_file_path)
-
         except Exception as e:
             self._log_error("Error processing API definition", e)
             raise
@@ -88,9 +88,23 @@ class FrameworkGenerator:
         """Generate the .env file from the provided API definition"""
         try:
             self.logger.info("\nGenerating .env file")
-            # Create a copy without paths
-            env_definition = api_definition.copy()
-            env_definition.pop("paths", None)  # None as default in case paths key doesn't exist
+            
+            # Remove paths from the API definition
+            api_definition_str = api_definition["yaml"]
+
+            try:
+                env_definition_dict = json.loads(api_definition_str)
+            except json.JSONDecodeError:
+                env_definition_dict = yaml.safe_load(api_definition_str)
+
+            if "paths" in env_definition_dict:
+                env_definition_dict.pop("paths")
+
+            if isinstance(api_definition_str, str) and api_definition_str.strip().startswith("{"):
+                env_definition = json.dumps(env_definition_dict)
+            else:
+                env_definition = yaml.dump(env_definition_dict)
+
             self.llm_service.generate_dot_env(env_definition)
         except Exception as e:
             self._log_error("Error creating .env file", e)
@@ -172,7 +186,6 @@ class FrameworkGenerator:
             return True
         return any(path.startswith(endpoint) for endpoint in self.config.endpoints)
 
-    @Checkpoint.checkpoint("generate_models")
     def _generate_models(self, api_definition: Dict[str, Any]) -> Optional[List[Dict[str, Any]]]:
         """Process a path definition and generate models"""
         try:

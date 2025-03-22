@@ -201,7 +201,7 @@ class CommandService:
                 all_test_files.append(rel_path)
 
         if all_test_files:
-            print("\n✅ Test files that will be run:")
+            print("\n✅ Test files ready to run:")
             for path in all_test_files:
                 print(f"   - {path}")
         else:
@@ -276,9 +276,11 @@ class CommandService:
                 title = test["title"]
                 duration = f"({test.get('duration')}ms)" if test.get("duration") else ""
                 if test.get("err"):
-                    print(f"    🔍 {title} - Require human evaluation")
+                    print(f"    🔍 {title}")
                 else:
                     print(f"    ✅ {title} {duration}")
+
+        print("\n🎉 Test run completed. The tests flagged with the 🔍 require manual review")
 
 
 def build_typescript_compiler_command(files: List[Dict[str, str]]) -> str:

@@ -172,9 +172,11 @@ class FrameworkGenerator:
                 if not test_files:
                     self.logger.warning("⚠️ No test files found! Skipping tests.")
                 else:
-                    self.command_service.run_specific_tests_excluding_errors(test_files)
+                    tests = self.command_service.get_runnable_tests(test_files)
 
-            self.logger.info("Final checks completed")
+            self.logger.info("\nFinal checks completed")
+
+            self.command_service.prompt_and_run_tests(tests)
 
         except Exception as e:
             self._log_error("Error during final checks", e)

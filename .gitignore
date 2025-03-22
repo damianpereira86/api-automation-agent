@@ -2,7 +2,7 @@
 .env
 /generated-framework_*/
 
-# Byte-compiled / optimized / DLL files
+/# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
 
@@ -63,6 +63,9 @@ target/
 
 # Idea
 /.idea
+
+# Virtual Environment
+venv/
 
 # Framework results
 /generated/*

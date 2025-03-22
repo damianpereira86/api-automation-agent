@@ -64,6 +64,9 @@ target/
 # Idea
 /.idea
 
+# Virtual Environment
+venv/
+
 # Framework results
 /generated/*
 /logs/*

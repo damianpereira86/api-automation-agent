@@ -31,7 +31,7 @@ class FileService:
         self.logger.info("Generating new framework...")
         try:
             shutil.copytree(src_folder, destination_folder)
-            self.logger.info(f"Framework template generated successfully.")
+            self.logger.info("Framework template generated successfully.")
             return destination_folder
         except Exception as e:
             self.logger.error(f"Error copying folder: {e}")

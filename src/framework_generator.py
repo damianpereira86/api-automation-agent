@@ -87,28 +87,48 @@ class FrameworkGenerator:
     def create_env_file(self, api_definition):
         """Generate the .env file from the provided API definition"""
         try:
-            self.logger.info("\nGenerating .env file")
+            self.logger.info("\nGenerating .env file...")
 
-            # Remove paths from the API definition
             api_definition_str = api_definition["yaml"]
-
             try:
-                env_definition_dict = json.loads(api_definition_str)
+                api_spec = json.loads(api_definition_str)
             except json.JSONDecodeError:
-                env_definition_dict = yaml.safe_load(api_definition_str)
+                api_spec = yaml.safe_load(api_definition_str)
 
-            if "paths" in env_definition_dict:
-                env_definition_dict.pop("paths")
+            base_url = self._extract_base_url(api_spec)
 
-            if isinstance(api_definition_str, str) and api_definition_str.strip().startswith("{"):
-                env_definition = json.dumps(env_definition_dict)
-            else:
-                env_definition = yaml.dump(env_definition_dict)
+            if not base_url:
+                self.logger.warning("⚠️ Could not extract base URL from API definition")
+                base_url = input("Please enter the base URL for the API: ")
 
-            self.llm_service.generate_dot_env(env_definition)
+            env_file_path = ".env"
+            env_content = f"BASEURL={base_url}\n"
+
+            file_spec = FileSpec(path=env_file_path, fileContent=env_content)
+            self.file_service.create_files(self.config.destination_folder, [file_spec])
+
+            self.logger.info(f"Generated .env file with BASEURL={base_url}")
+
         except Exception as e:
             self._log_error("Error creating .env file", e)
             raise
+
+    def _extract_base_url(self, api_spec):
+        """Extract base URL from OpenAPI specification"""
+        if "openapi" in api_spec and api_spec["openapi"].startswith("3."):
+            if "servers" in api_spec and api_spec["servers"] and "url" in api_spec["servers"][0]:
+                return api_spec["servers"][0]["url"]
+        elif "swagger" in api_spec and api_spec["swagger"].startswith("2."):
+            host = api_spec.get("host")
+            if host:
+                scheme = "https"
+                if "schemes" in api_spec and api_spec["schemes"]:
+                    scheme = api_spec["schemes"][0]
+
+                base_path = api_spec.get("basePath", "")
+                return f"{scheme}://{host}{base_path}"
+
+        return None
 
     @Checkpoint.checkpoint()
     def generate(

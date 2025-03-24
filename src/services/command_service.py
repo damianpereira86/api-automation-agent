@@ -180,107 +180,14 @@ class CommandService:
 
         return test_files
 
-    def get_runnable_tests(self, files: List[Dict[str, str]]) -> Tuple[List[str], List[str]]:
-        success, tsc_output = self.run_typescript_compiler()
-
-        error_files = set()
-        if not success:
-            for line in tsc_output.split("\n"):
-                match = re.search(r"(src/tests/.*?\.spec\.ts)", line)
-                if match:
-                    error_files.add(os.path.normpath(match.group(1)))
-
-        all_test_files = []
-        skipped_files = []
-
-        for file in files:
-            rel_path = os.path.normpath(os.path.relpath(file["path"], self.config.destination_folder))
-            if any(rel_path.endswith(err_file) for err_file in error_files):
-                skipped_files.append(rel_path)
-            else:
-                all_test_files.append(rel_path)
-
-        if all_test_files:
-            print("\n✅ Test files ready to run:")
-            for path in all_test_files:
-                print(f"   - {path}")
-        else:
-            print("\n⚠️ No test files can be run due to compilation errors.")
-
-        if skipped_files:
-            print("\n❌ Skipping test files with TypeScript errors:")
-            for path in skipped_files:
-                print(f"   - {path}")
-
-        return all_test_files
-
-    def prompt_and_run_tests(self, runnable_test_files: List[str]) -> None:
-
-        answer = input("\n🧪 Do you want to run the tests now? (y/n): ").strip().lower()
-        if answer not in ("y", "yes"):
-            print("🛑 Test run skipped.")
-            return
-
-        all_test_files = runnable_test_files
-        print("\n🛠️ Running tests ...\n")
-
-        all_parsed_tests = []
-        total_files = len(all_test_files)
-
-        for index, test_file in enumerate(all_test_files, start=1):
-            file_name = os.path.basename(test_file)
-
-            animator = LoadingDotsAnimator(prefix=f"▶️ Running file {file_name} ({index}/{total_files}) ")
-            animator.start()
-
-            command = f"npx mocha {test_file} --reporter json --timeout 10000 --no-warnings"
-
-            try:
-                result = subprocess.run(
-                    command,
-                    shell=True,
-                    cwd=self.config.destination_folder,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    encoding="utf-8",
-                    errors="replace",
-                    timeout=60,
-                )
-                stdout = result.stdout or ""
-                parsed = json.loads(stdout)
-                all_parsed_tests.extend(parsed.get("tests", []))
-
-                animator.stop()
-                sys.stdout.write(f"\r{' ' * 80}\r✅ {file_name} ({index}/{total_files})\n")
-            except subprocess.TimeoutExpired:
-                animator.stop()
-                sys.stdout.write(
-                    f"\r{' ' * 80}\r🔍 {file_name} ({index}/{total_files}) - Timed out. Require human evaluation\n"
-                )
-            except json.JSONDecodeError:
-                animator.stop()
-                sys.stdout.write(
-                    f"\r❌ {file_name} ({index}/{total_files}) - Failed to parse test output. Check if tests ran correctly.\n"
-                )
-
-            grouped_tests = defaultdict(list)
-
-        for test in parsed.get("tests", []):
-            full_title = test.get("fullTitle", "")
-            suite_title = full_title.replace(test["title"], "").strip() or "Ungrouped"
-            grouped_tests[suite_title].append(test)
-
-        for suite, tests in grouped_tests.items():
-            print(f"\n📂 {suite}")
-            for test in tests:
-                title = test["title"]
-                duration = f"({test.get('duration')}ms)" if test.get("duration") else ""
-                if test.get("err"):
-                    print(f"    🔍 {title}")
-                else:
-                    print(f"    ✅ {title} {duration}")
-
-        print("\n🎉 Test run completed. The tests flagged with the 🔍 require manual review")
+    def run_typescript_compiler_for_files(
+        self,
+        files: List[Dict[str, str]],
+    ) -> Tuple[bool, str]:
+        """Run TypeScript compiler for specific files"""
+        self._log_message(f"Running TypeScript compiler for files: {[file['path'] for file in files]}")
+        compiler_command = build_typescript_compiler_command(files)
+        return self.run_command(compiler_command)
 
 
 def build_typescript_compiler_command(files: List[Dict[str, str]]) -> str:

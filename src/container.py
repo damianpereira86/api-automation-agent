@@ -6,6 +6,8 @@ from src.services.file_service import FileService
 
 from dependency_injector import containers, providers
 
+from src.test_controller import TestController
+
 
 class Container(containers.DeclarativeContainer):
     """Main container for the API framework generation process."""
@@ -23,9 +25,8 @@ class Container(containers.DeclarativeContainer):
     swagger_processor = processors_adapter.swagger_processor
 
     # Services
-    file_service = providers.Factory(
-        FileService
-    )
+    file_service = providers.Factory(FileService)
+
     llm_service = providers.Factory(
         LLMService,
         config=config,
@@ -34,6 +35,12 @@ class Container(containers.DeclarativeContainer):
     command_service = providers.Factory(
         CommandService,
         config=config,
+    )
+
+    test_controller = providers.Factory(
+        TestController,
+        config=config,
+        command_service=command_service,
     )
 
     # Framework generator

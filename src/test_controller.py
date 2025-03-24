@@ -112,12 +112,11 @@ class TestController:
 
         for test in tests + failures:
             key = test.get("fullTitle", "") or test.get("title", "")
-        if key and key not in seen:
-            seen.add(key)
-            all_results.append(test)
+            if key and key not in seen:
+                seen.add(key)
+                all_results.append(test)
 
-        all_tests = tests + failures
-        for test in all_tests:
+        for test in all_results:
             full_title = test.get("fullTitle", "")
             suite_title = full_title.replace(test.get("title", ""), "").strip() or "Ungrouped"
             grouped_tests[suite_title].append(test)

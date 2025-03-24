@@ -18,7 +18,6 @@ Your task is to create API automation test code based on an OpenAPI definition u
 - Make sure to take into consideration the models in the 'Additional Models' section for setting up pre and post conditions in the test setup/teardown hooks.
 - The files should be error-free TypeScript files, adhering to TypeScript and ESLint standards.
 - Use optional chaining (?.) in the test assertions or any place where object properties might be undefined (e.g.: response.data?.id.should.equal(orderId);) to avoid potential undefined errors.
-- Ensure status code assertions align with HTTP standards (e.g., use 201 for create actions).
 - Create any other required model by the test that is not included in the Models section.
 - Include ".js" in the import statements.
 - Ensure that the test file name starts with the verb to avoid overriding specs (e.g. `Get-GetUser.spec.ts` or `Post-CreateUser.spec.ts`)

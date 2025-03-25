@@ -1,6 +1,7 @@
+from dataclasses import dataclass
 import re
 import sys
-from typing import List, Dict
+from typing import List, Dict, Optional, Tuple
 from collections import defaultdict
 import subprocess
 import os
@@ -11,6 +12,12 @@ from src.utils.logger import Logger
 from src.visuals.loading_animator import LoadingDotsAnimator
 
 
+@dataclass
+class TestFileSet:
+    runnable: List[str]
+    skipped: List[str]
+
+
 class TestController:
 
     def __init__(self, config: Config, command_service: CommandService):
@@ -18,7 +25,7 @@ class TestController:
         self.config = config
         self.logger = Logger.get_logger(__name__)
 
-    def get_runnable_files(self, test_files: List[Dict[str, str]]) -> Dict[str, List[str]]:
+    def _get_runnable_files(self, test_files: List[Dict[str, str]]) -> TestFileSet:
 
         success, tsc_output = self.command_service.run_typescript_compiler()
 
@@ -40,28 +47,29 @@ class TestController:
                 runnable_files.append(rel_path)
 
         if runnable_files:
-            print("\n✅ Test files ready to run:")
+            self.logger.info("\n✅ Test files ready to run:")
             for path in runnable_files:
-                print(f"   - {path}")
+                self.logger.info(f"   - {path}")
         else:
-            print("\n⚠️ No test files can be run due to compilation errors.")
+            self.logger.warning("\n⚠️ No test files can be run due to compilation errors.")
 
         if skipped_files:
-            print("\n❌ Skipping test files with TypeScript compilation errors:")
+            self.logger.warning("\n❌ Skipping test files with TypeScript compilation errors:")
             for path in skipped_files:
-                print(f"   - {path}")
+                self.logger.warning(f"   - {path}")
 
         self.logger.info("\nFinal checks completed")
-        return {"runnable": runnable_files, "skipped": skipped_files}
+        return TestFileSet(runnable=runnable_files, skipped=skipped_files)
 
-    def prompt_to_run_tests(self) -> bool:
+    def _prompt_to_run_tests(self) -> bool:
         answer = input("\n🧪 Do you want to run the tests now? (y/n): ").strip().lower()
-        if answer not in ("y", "yes", "Y", "YES"):
-            self.logger.info("\n🔵 Test run skipped.")
-            return False
-        return True
+        return answer in ("y", "yes")
 
-    def run_tests(self, test_files: List[str], skipped_files: List[str] = []) -> List[Dict[str, str]]:
+    def _run_tests(
+        self, test_files: List[str], skipped_files: Optional[List[str]] = None
+    ) -> Tuple[List[Dict[str, str]], List[Dict[str, str]]]:
+        if skipped_files is None:
+            skipped_files = []
         self.logger.info("\n🛠️ Running tests ...\n")
         all_parsed_tests = []
         all_parsed_failures = []
@@ -77,17 +85,9 @@ class TestController:
             command = f"npx mocha -r ts-node/register {test_file} {ignore_flags} --reporter json --timeout 10000 --no-warnings"
 
             try:
-                result = subprocess.run(
-                    command,
-                    shell=True,
-                    cwd=self.config.destination_folder,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.PIPE,
-                    encoding="utf-8",
-                    errors="replace",
-                    timeout=60,
+                stdout = self.command_service.run_command_silently(
+                    command, cwd=self.config.destination_folder
                 )
-                stdout = result.stdout or ""
                 parsed = json.loads(stdout)
                 all_parsed_tests.extend(parsed.get("tests", []))
                 all_parsed_failures.extend(parsed.get("failures", []))
@@ -104,7 +104,7 @@ class TestController:
 
         return all_parsed_tests, all_parsed_failures
 
-    def report_tests(self, tests: List[Dict[str, str]], failures: List[Dict[str, str]] = []) -> None:
+    def _report_tests(self, tests: List[Dict[str, str]], failures: List[Dict[str, str]] = []) -> None:
         grouped_tests = defaultdict(list)
 
         seen = set()
@@ -135,15 +135,16 @@ class TestController:
         self.logger.info("\n🎉 Test run completed. Tests flagged with 🔍 require further review\n")
 
     def run_tests_flow(self, test_files: List[Dict[str, str]]) -> None:
-        test_data = self.get_runnable_files(test_files)
-        runnable_files = test_data["runnable"]
-        skipped_files = test_data["skipped"]
+        test_data = self._get_runnable_files(test_files)
+        runnable_files = test_data.runnable
+        skipped_files = test_data.skipped
         if not runnable_files:
             self.logger.warning("⚠️ No test files can be run due to compilation errors.")
             return
 
-        if not self.prompt_to_run_tests():
+        if not self._prompt_to_run_tests():
+            self.logger.info("\n🔵 Test run skipped.")
             return
 
-        results, hook_failures = self.run_tests(runnable_files, skipped_files)
-        self.report_tests(results, hook_failures)
+        results, hook_failures = self._run_tests(runnable_files, skipped_files)
+        self._report_tests(results, hook_failures)

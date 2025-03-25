@@ -82,7 +82,7 @@ class CommandService:
 
             success = process.returncode == 0
             self._log_message(
-                (f"\033[92mCommand succeeded.\033[0m" if success else f"\033[91mCommand failed.\033[0m"),
+                ("\033[92mCommand succeeded.\033[0m" if success else "\033[91mCommand failed.\033[0m"),
                 is_error=not success,
             )
             return success, "\n".join(output_lines)
@@ -93,6 +93,18 @@ class CommandService:
         except Exception as e:
             self._log_message(f"Unexpected error: {e}", is_error=True)
             return False, str(e)
+
+    def run_command_silently(self, command: str, cwd: str) -> str:
+        result = subprocess.run(
+            command,
+            shell=True,
+            cwd=cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="utf-8",
+            errors="replace",
+        )
+        return result.stdout or ""
 
     def run_command_with_fix(
         self,

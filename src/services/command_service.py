@@ -1,8 +1,12 @@
+from collections import defaultdict
+import json
 import os
 import re
 import subprocess
 import logging
+import sys
 from typing import List, Dict, Tuple, Optional, Callable
+from src.visuals.loading_animator import LoadingDotsAnimator
 
 from ..configuration.config import Config
 
@@ -78,11 +82,7 @@ class CommandService:
 
             success = process.returncode == 0
             self._log_message(
-                (
-                    f"\033[92mCommand succeeded.\033[0m"
-                    if success
-                    else f"\033[91mCommand failed.\033[0m"
-                ),
+                ("\033[92mCommand succeeded.\033[0m" if success else "\033[91mCommand failed.\033[0m"),
                 is_error=not success,
             )
             return success, "\n".join(output_lines)
@@ -93,6 +93,18 @@ class CommandService:
         except Exception as e:
             self._log_message(f"Unexpected error: {e}", is_error=True)
             return False, str(e)
+
+    def run_command_silently(self, command: str, cwd: str) -> str:
+        result = subprocess.run(
+            command,
+            shell=True,
+            cwd=cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="utf-8",
+            errors="replace",
+        )
+        return result.stdout or ""
 
     def run_command_with_fix(
         self,
@@ -137,9 +149,7 @@ class CommandService:
         if success:
             return success, message
 
-        self._log_message(
-            f"Command failed after {max_retries} attempts.", is_error=True
-        )
+        self._log_message(f"Command failed after {max_retries} attempts.", is_error=True)
         return False, message
 
     def install_dependencies(self) -> Tuple[bool, str]:
@@ -187,51 +197,9 @@ class CommandService:
         files: List[Dict[str, str]],
     ) -> Tuple[bool, str]:
         """Run TypeScript compiler for specific files"""
-        self._log_message(
-            f"Running TypeScript compiler for files: {[file['path'] for file in files]}"
-        )
+        self._log_message(f"Running TypeScript compiler for files: {[file['path'] for file in files]}")
         compiler_command = build_typescript_compiler_command(files)
         return self.run_command(compiler_command)
-
-    def run_specific_tests_excluding_errors(
-        self, files: List[Dict[str, str]]
-    ) -> Tuple[bool, str]:
-        """Run specific tests, excluding files with TypeScript compilation errors using --ignore."""
-
-        self.logger.info("\n🛠️ Starting test execution...")
-
-        success, tsc_output = self.run_typescript_compiler()
-
-        error_files = set()
-        if not success:
-            for line in tsc_output.split("\n"):
-                match = re.search(r"(src/tests/.*?\.spec\.ts)", line)
-                if match:
-                    error_files.add(os.path.normpath(match.group(1)))
-
-        if error_files:
-            formatted_errors = "\n".join(f"   - {error}" for error in error_files)
-            self.logger.info(f"\n❌ Skipping files with errors:\n{formatted_errors}")
-
-        try:
-            formatted_file_paths = "\n".join(
-                f"   - {os.path.normpath(os.path.relpath(file['path'], self.config.destination_folder))}"
-                for file in files
-                if not any(
-                    os.path.normpath(file["path"]).endswith(error)
-                    for error in error_files
-                )
-            )
-        except Exception as e:
-            self.logger.error(f"Error formatting paths: {str(e)}")
-            return False, f"Error formatting paths: {str(e)}"
-
-        self.logger.info(f"\n📝 Test files to be executed:\n{formatted_file_paths}\n")
-
-        ignore_flags = " ".join(f"--ignore {file}" for file in error_files)
-        command = f"npx mocha {ignore_flags} --timeout 10000 --no-warnings".strip()
-
-        return self.run_command(command)
 
 
 def build_typescript_compiler_command(files: List[Dict[str, str]]) -> str:

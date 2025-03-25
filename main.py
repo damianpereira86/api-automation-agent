@@ -11,6 +11,7 @@ from src.configuration.cli import CLIArgumentParser
 from src.configuration.config import Config, GenerationOptions, Envs
 from src.container import Container
 from src.framework_generator import FrameworkGenerator
+from src.test_controller import TestController
 from src.utils.checkpoint import Checkpoint
 from src.utils.logger import Logger
 from src.processors.swagger.endpoint_lister import EndpointLister
@@ -21,6 +22,7 @@ def main(
     logger: logging.Logger,
     config: Config = Provide[Container.config],
     framework_generator: FrameworkGenerator = Provide[Container.framework_generator],
+    test_controller: TestController = Provide[Container.test_controller],
 ):
     """Main function to orchestrate the API framework generation process."""
     try:
@@ -86,9 +88,12 @@ def main(
                 framework_generator.create_env_file(api_definitions[0])
 
             framework_generator.generate(api_definitions, config.generate)
-            framework_generator.run_final_checks(config.generate)
+            test_files = framework_generator.run_final_checks(config.generate)
 
             logger.info("\n✅ Framework generation completed successfully!")
+
+            if test_files:
+                test_controller.run_tests_flow(test_files)
 
         checkpoint.clear()
 

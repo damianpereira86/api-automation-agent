@@ -191,7 +191,68 @@ Or simply run it for the whole API
 python ./main.py http://localhost:3000/swagger.json
 ```
 
-## Contributing
+## Checkpoints
+
+The checkpoints feature allows you to save and restore the state of the framework generation process. This is useful if you need to interrupt the process and resume it later without losing progress.
+
+### Purpose
+
+The purpose of the checkpoints feature is to provide a way to save the current state of the framework generation process and restore it later.
+
+### How to Use
+
+1. **Saving State**: The state is automatically saved at various points during the framework generation process. You don't need to manually save the state.
+
+2. **Restoring State**: If a previous run was interrupted, you will be prompted to resume the process when you run the agent again. The agent will restore the last saved state and continue from where it left off.
+
+3. **Clearing Checkpoints**: After the framework generation process is completed successfully, the checkpoints are automatically cleared.
+
+### Implementation
+
+The checkpoints feature is implemented in the `src/utils/checkpoint.py` file. It uses the `shelve` module to store the state in a persistent dictionary.
+
+#### Decorator to Functions
+
+The `Checkpoint` class provides a `checkpoint` decorator that can be used to automatically save and restore the state of a function. This decorator can be applied to any function that you want to checkpoint.
+
+Example:
+
+```python
+from src.utils.checkpoint import Checkpoint
+
+class MyClass:
+    def __init__(self):
+        self.checkpoint = Checkpoint(self)
+
+    @Checkpoint.checkpoint()
+    def my_function(self, arg1, arg2):
+        # Function logic here
+        pass
+```
+
+#### For Wrapper
+
+The `checkpoint_iter` method of the `Checkpoint` class can be used to wrap a for-loop and automatically save and restore progress. This is useful for long-running loops where you want to ensure progress is not lost.
+
+Example:
+
+```python
+from src.utils.checkpoint import Checkpoint
+
+class MyClass:
+    def __init__(self):
+        self.checkpoint = Checkpoint(self)
+        self.state = {"info": []}
+
+    def my_loop_function(self, items):
+        for item in self.checkpoint.checkpoint_iter(items, "my_loop", self.state):
+            self.state["info"].append(item)
+         print(self.state)
+```
+
+In the example above, the `checkpoint_iter` method is used to wrap the for-loop. The `self.state` dictionary is passed as the third argument to the `checkpoint_iter` method. This dictionary needs to be in the format of a dict with a state. The iteration will start from where it left off (index) and restore the last state of the third variable.
+
+## Contribution Guidelines
 
 Contributions are welcome! Here's how you can help:
 

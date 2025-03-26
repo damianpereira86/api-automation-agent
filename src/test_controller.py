@@ -82,7 +82,10 @@ class TestController:
             animator.start()
 
             ignore_flags = " ".join(f"--ignore {path}" for path in skipped_files)
-            command = f"npx mocha -r ts-node/register {test_file} {ignore_flags} --reporter json --timeout 10000 --no-warnings"
+            command = (
+                f"npx mocha -r ts-node/register {test_file} {ignore_flags} "
+                "--reporter json --timeout 10000 --no-warnings"
+            )
 
             try:
                 stdout = self.command_service.run_command_silently(
@@ -99,7 +102,8 @@ class TestController:
             except json.JSONDecodeError:
                 animator.stop()
                 sys.stdout.write(
-                    f"\r❌ {file_name} ({index}/{total_files}) - Failed to parse test output. Check if tests ran correctly.\n"
+                    f"\r❌ {file_name} ({index}/{total_files}) - "
+                    "Failed to parse test output. Check if tests ran correctly.\n"
                 )
 
         return all_parsed_tests, all_parsed_failures
@@ -115,6 +119,9 @@ class TestController:
             if key and key not in seen:
                 seen.add(key)
                 all_results.append(test)
+
+        passed_tests = sum(1 for test in all_results if not test.get("err"))
+        total_tests = len(all_results)
 
         for test in all_results:
             full_title = test.get("fullTitle", "")
@@ -132,7 +139,9 @@ class TestController:
                 else:
                     self.logger.info(f"    ✅ {title} {duration}")
 
-        self.logger.info("\n🎉 Test run completed. Tests flagged with 🔍 require further review\n")
+        self.logger.info("\n🎉 Test run completed")
+        self.logger.info(f"\n✅ {passed_tests} tests passed")
+        self.logger.info(f"🔍 {total_tests - passed_tests} tests flagged require further review\n")
 
     def run_tests_flow(self, test_files: List[Dict[str, str]]) -> None:
         test_data = self._get_runnable_files(test_files)
